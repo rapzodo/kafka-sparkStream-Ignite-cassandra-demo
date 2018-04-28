@@ -1,11 +1,12 @@
-package com.gridu.stopbot.spark.processing.com.gridu.stopbot.model;
+package com.gridu.stopbot.model;
 
-import com.gridu.stopbot.spark.processing.com.gridu.stopbot.enums.EventType;
+import com.gridu.stopbot.enums.EventType;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @JsonPropertyOrder({"type","ip","unix_time","url"})
 public class Event {
@@ -69,5 +70,22 @@ public class Event {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Event)) return false;
+        Event event = (Event) o;
+        return getUnixTime() == event.getUnixTime() &&
+                getType() == event.getType() &&
+                Objects.equals(getIp(), event.getIp()) &&
+                Objects.equals(getUrl(), event.getUrl());
+    }
+
+    @Override
+    public int hashCode() {
+
+        return Objects.hash(getType(), getIp(), getUnixTime(), getUrl());
     }
 }

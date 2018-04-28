@@ -1,5 +1,5 @@
-import com.gridu.stopbot.spark.processing.com.gridu.stopbot.enums.EventType;
-import com.gridu.stopbot.spark.processing.com.gridu.stopbot.model.Event;
+import com.gridu.stopbot.enums.EventType;
+import com.gridu.stopbot.model.Event;
 import org.junit.Assert;
 import org.junit.Test;
 
