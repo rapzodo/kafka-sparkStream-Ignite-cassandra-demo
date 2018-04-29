@@ -1,9 +1,9 @@
-package com.gridu.stopbot.spark.processing.utils;
+package com.gridu.stopbot.spark.processors.utils;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.TaskContext;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.streaming.api.java.JavaInputDStream;
+import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.kafka010.CanCommitOffsets;
 import org.apache.spark.streaming.kafka010.HasOffsetRanges;
 import org.apache.spark.streaming.kafka010.OffsetRange;
@@ -14,10 +14,10 @@ import java.util.stream.IntStream;
 
 public class OffsetUtils     {
 
-    public static void commitOffSets(JavaRDD<ConsumerRecord<String,String>> rdd, JavaInputDStream is){
+    public static void commitOffSets(JavaRDD<ConsumerRecord<String,String>> rdd, JavaDStream is){
         rdd.map( consumerRecord -> consumerRecord.value()).foreach(s-> System.out.println(s));
         OffsetRange[] offsetRange = ((HasOffsetRanges) rdd.rdd()).offsetRanges();
-        ((CanCommitOffsets) is.inputDStream()).commitAsync(offsetRange);
+        ((CanCommitOffsets) is).commitAsync(offsetRange);
     }
 
     public static OffsetRange[] getOffSetRanges(JavaRDD<ConsumerRecord<String,String>> rdd){

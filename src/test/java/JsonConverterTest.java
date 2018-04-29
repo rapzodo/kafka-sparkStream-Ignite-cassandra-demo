@@ -1,23 +1,25 @@
+import com.gridu.stopbot.converters.JsonConverter;
 import com.gridu.stopbot.enums.EventType;
 import com.gridu.stopbot.model.Event;
-import org.junit.Assert;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import java.io.IOException;
+import static org.assertj.core.api.Assertions.*;
 
-public class EventJsonTest {
+public class JsonConverterTest {
 
 
     @Test
-    public void testEventToJsonParsing() throws IOException {
+    public void testEventToJsonParsing() {
         String expectedJson = "{\"type\":\"click\",\"ip\":\"123.345.567\"," +
                 "\"unix_time\":12345,\"url\":\"http:someUrl\"}";
-        Assert.assertEquals(expectedJson,anEvent().toJson());
+        assertThat(JsonConverter.toJson(anEvent())).isEqualTo(expectedJson);
     }
 
     @Test
-    public void testFromJson() throws IOException {
-        Assert.assertEquals(anEvent(), Event.fromJson(aJsonString()));
+    public void testFromJson() {
+        assertThat(JsonConverter.fromJson(aJsonString())).isEqualTo(anEvent());
     }
 
     private Event anEvent() {

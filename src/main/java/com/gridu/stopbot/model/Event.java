@@ -3,9 +3,6 @@ package com.gridu.stopbot.model;
 import com.gridu.stopbot.enums.EventType;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
-import org.codehaus.jackson.map.ObjectMapper;
-
-import java.io.IOException;
 import java.util.Objects;
 
 @JsonPropertyOrder({"type","ip","unix_time","url"})
@@ -52,25 +49,6 @@ public class Event {
         this.url = url;
     }
 
-    public String toJson(){
-
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public static Event fromJson(String jsonString){
-        try {
-            return new ObjectMapper().readValue(jsonString,Event.class);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     @Override
     public boolean equals(Object o) {

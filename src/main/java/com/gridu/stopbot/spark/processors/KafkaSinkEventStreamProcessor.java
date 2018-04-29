@@ -1,16 +1,17 @@
-package com.gridu.stopbot.spark.processing;
+package com.gridu.stopbot.spark.processors;
 
 import com.google.common.collect.ImmutableMap;
+import com.gridu.stopbot.converters.JsonConverter;
 import com.gridu.stopbot.model.Event;
 import com.gridu.stopbot.model.QueryResult;
-import com.gridu.stopbot.spark.processing.utils.OffsetUtils;
+import com.gridu.stopbot.spark.processors.utils.OffsetUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.*;
 import org.apache.spark.streaming.Duration;
+import org.apache.spark.streaming.Minutes;
 import org.apache.spark.streaming.api.java.JavaDStream;
-import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka010.*;
 
@@ -20,7 +21,7 @@ import java.util.Map;
 
 import static org.apache.spark.sql.functions.*;
 
-public class StreamProcessor implements EventsProcessor {
+public class KafkaSinkEventStreamProcessor implements EventsProcessor {
 
     private List<String> topics;
 
@@ -42,7 +43,7 @@ public class StreamProcessor implements EventsProcessor {
             .build();
     }
 
-    public StreamProcessor(List<String> topics, Map<String, Object> props, SparkSession session) {
+    public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props, SparkSession session) {
         this.topics = topics;
         this.props = props;
         this.session=session;
@@ -52,16 +53,17 @@ public class StreamProcessor implements EventsProcessor {
         JavaStreamingContext jsc = new JavaStreamingContext("local[*]", "appName2", Duration.apply(3));
         jsc.sparkContext().setLogLevel("ERROR");
 
-        JavaInputDStream<ConsumerRecord<String, String>> events = KafkaUtils.createDirectStream(jsc, LocationStrategies.PreferConsistent(),
-                ConsumerStrategies.<String, String>Subscribe(topics, props));
+        JavaDStream<ConsumerRecord<String, String>> stream = KafkaUtils.createDirectStream(jsc, LocationStrategies.PreferConsistent(),
+                ConsumerStrategies.<String, String>Subscribe(topics, props))
+                .window(Minutes.apply(10), Minutes.apply(1));
 
-        JavaDStream<String> messages = events.map(consumerRecord -> consumerRecord.value());
-        messages.foreachRDD((rdd, time) -> {
-
+        JavaDStream<Event> events = stream.map(consumerRecord -> JsonConverter.fromJson(consumerRecord.value()));
+        events.foreachRDD((rdd, time) -> {
+            countUrlActions(rdd);
         });
 
         if (!offsetsAutoCommit){
-            events.foreachRDD(rdd -> OffsetUtils.commitOffSets(rdd, events));
+            stream.foreachRDD(rdd -> OffsetUtils.commitOffSets(rdd, stream));
         }
         jsc.start();
         try {
@@ -75,7 +77,7 @@ public class StreamProcessor implements EventsProcessor {
         return queryResult.getNumberOfActions() > CLICKS_THRESHOLD;
     }
 
-    public Dataset<QueryResult> countUrlActions(JavaRDD rdd) {
+    public Dataset<QueryResult> countUrlActions(JavaRDD<Event> rdd) {
         Dataset<Event> events = session.createDataset(rdd.rdd(), Encoders.bean(Event.class));
         Dataset<QueryResult> result = events.select(col("ip"), col("url"))
                 .groupBy(col("ip"), col("url"))

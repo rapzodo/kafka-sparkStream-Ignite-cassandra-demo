@@ -1,6 +1,4 @@
-package com.gridu.stopbot.spark.processing;
-
-import java.util.Map;
+package com.gridu.stopbot.spark.processors;
 
 public interface EventsProcessor {
 
