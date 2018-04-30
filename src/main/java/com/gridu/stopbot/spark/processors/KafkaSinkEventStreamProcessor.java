@@ -27,25 +27,25 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
     private List<String> topics;
     private Map<String, Object> props;
     public static final long CLICKS_THRESHOLD = 18;
-    private SparkSession session;
     private JavaStreamingContext jsc;
 
     public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props,JavaStreamingContext jsc) {
         this.topics = topics;
         this.props = props;
-        this.session=session;
         this.jsc=jsc;
     }
 
     public void process(boolean offsetsAutoCommit) {
         jsc.sparkContext().setLogLevel("ERROR");
         JavaInputDStream<ConsumerRecord<String, String>> stream = KafkaUtils.createDirectStream(jsc, LocationStrategies.PreferConsistent(),
-                ConsumerStrategies.<String, String>Subscribe(topics, props));
+                ConsumerStrategies.Subscribe(topics, props));
 
         JavaDStream<Event> events = stream.map(consumerRecord -> JsonConverter.fromJson(consumerRecord.value()))
                 .window(Minutes.apply(10), Seconds.apply(3));;
         events.foreachRDD((rdd, time) -> {
-            session = SparkSession.builder().sparkContext(jsc.sparkContext().sc()).getOrCreate();
+            SparkSession session = SparkSession.builder()
+                    .sparkContext(jsc.sparkContext().sc())
+                    .getOrCreate();
 
             Dataset<Event> eventsDS = session.createDataset(rdd.rdd(), Encoders.bean(Event.class));
 
@@ -68,7 +68,7 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
 
     public Dataset<BotRegistry> aggregateAndCountIpUrlActions(Dataset<Event> eventDataset) {
         Dataset<BotRegistry> result = eventDataset.select(col("ip"), col("url"))
-                .groupBy(col("ip"), col("url"))
+                .groupBy(col("ip"),col("type"), col("url"))
                 .count().orderBy(col("count").desc())
                 .map(row -> new BotRegistry(row.getString(0),row.getString(1),row.getLong(2))
                         , Encoders.bean(BotRegistry.class));
