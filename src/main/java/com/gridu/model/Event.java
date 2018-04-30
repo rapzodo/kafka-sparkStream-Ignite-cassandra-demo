@@ -1,6 +1,6 @@
-package com.gridu.stopbot.model;
+package com.gridu.model;
 
-import com.gridu.stopbot.enums.EventType;
+import com.gridu.enums.EventType;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 

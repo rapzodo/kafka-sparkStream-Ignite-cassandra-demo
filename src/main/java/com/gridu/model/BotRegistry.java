@@ -1,4 +1,4 @@
-package com.gridu.stopbot.model;
+package com.gridu.model;
 
 import java.io.Serializable;
 import java.util.Objects;

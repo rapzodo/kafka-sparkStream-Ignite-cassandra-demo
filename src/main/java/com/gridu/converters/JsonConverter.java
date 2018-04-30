@@ -1,6 +1,6 @@
-package com.gridu.stopbot.converters;
+package com.gridu.converters;
 
-import com.gridu.stopbot.model.Event;
+import com.gridu.model.Event;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

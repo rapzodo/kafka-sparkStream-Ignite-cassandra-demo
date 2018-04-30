@@ -1,9 +1,8 @@
-package com.gridu.stopbot.spark.processors.utils;
+package com.gridu.spark.utils;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.TaskContext;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.kafka010.CanCommitOffsets;
 import org.apache.spark.streaming.kafka010.HasOffsetRanges;

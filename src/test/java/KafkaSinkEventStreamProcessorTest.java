@@ -1,8 +1,9 @@
 import com.google.common.collect.ImmutableMap;
-import com.gridu.stopbot.converters.JsonConverter;
-import com.gridu.stopbot.model.Event;
-import com.gridu.stopbot.model.BotRegistry;
-import com.gridu.stopbot.spark.processors.KafkaSinkEventStreamProcessor;
+import com.gridu.converters.JsonConverter;
+import com.gridu.model.BotRegistry;
+import com.gridu.model.Event;
+import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
+import com.gridu.spark.sql.EventDao;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -10,19 +11,25 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
-import org.junit.*;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class KafkaSinkEventStreamProcessorTest{
     private KafkaSinkEventStreamProcessor processor;
-    private SparkSession session;
     private List<String> topics;
     private Map<String,Object> kafkaprops;
     private Dataset<Row> rows;
     private JavaStreamingContext javaStreamingContext;
+    private EventDao dao;
+    private SparkSession session;
 
     @Before
     public void setup(){
@@ -37,32 +44,24 @@ public class KafkaSinkEventStreamProcessorTest{
 
         javaStreamingContext = new JavaStreamingContext("local[*]", "stopbotUnittests", Duration.apply(3));
 
-        session = SparkSession.builder().sparkContext(javaStreamingContext.sparkContext().sc()).getOrCreate();
-        session.sparkContext().setLogLevel("ERROR");
         rows = session.read().option("header",true).text("./input/dataset").cache();
 
-        processor = new KafkaSinkEventStreamProcessor(topics,kafkaprops, javaStreamingContext);
-    }
+        dao = new EventDao(javaStreamingContext.sparkContext().sc());
 
-    @Test
-    public void testIpIUrlActionsAggregation(){
-        Dataset<Event> messages = rows.map(row -> JsonConverter.fromJson(row.getString(0)), Encoders.bean(Event.class));
-        Dataset<BotRegistry> result = processor.aggregateAndCountIpUrlActions(messages);
-        BotRegistry expected = new BotRegistry("148.67.43.14",
-                "http://9d345009-a-62cb3a1a-s-sites.googlegroups.com/index.html",19);
-        assertThat(result.first()).isEqualTo(expected);
+        processor = new KafkaSinkEventStreamProcessor(topics,kafkaprops, javaStreamingContext,dao);
     }
 
     @Test
     public void shouldAggregateFilterAndFindOneBot(){
         Dataset<Event> messages = rows.map(row -> JsonConverter.fromJson(row.getString(0)), Encoders.bean(Event.class));
-        Dataset<BotRegistry> result = processor.findBots(messages).cache();
+        Dataset<BotRegistry> result = processor.identifyBots(messages.toJavaRDD().rdd()).cache();
 
         assertThat(result.count()).isEqualTo(1);
         assertThat(result.first().getIp()).isEqualTo("148.67.43.14");
     }
 
     @Test
+    @Ignore
     public void testProcessing(){
         processor.process(false);
     }

@@ -1,4 +1,4 @@
-package com.gridu.stopbot.spark.processors;
+package com.gridu.spark.processors;
 
 import java.io.Serializable;
 

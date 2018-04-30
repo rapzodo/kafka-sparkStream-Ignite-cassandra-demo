@@ -1,10 +1,8 @@
-import com.gridu.stopbot.converters.JsonConverter;
-import com.gridu.stopbot.enums.EventType;
-import com.gridu.stopbot.model.Event;
-import org.assertj.core.api.Assertions;
+import com.gridu.converters.JsonConverter;
+import com.gridu.enums.EventType;
+import com.gridu.model.Event;
 import org.junit.Test;
 
-import java.io.IOException;
 import static org.assertj.core.api.Assertions.*;
 
 public class JsonConverterTest {

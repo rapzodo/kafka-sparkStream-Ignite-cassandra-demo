@@ -1,13 +1,13 @@
-package com.gridu.stopbot.spark.processors;
+package com.gridu.spark.processors;
 
-import com.gridu.stopbot.converters.JsonConverter;
-import com.gridu.stopbot.model.BotRegistry;
-import com.gridu.stopbot.model.Event;
-import com.gridu.stopbot.spark.processors.utils.OffsetUtils;
+import com.gridu.converters.JsonConverter;
+import com.gridu.model.BotRegistry;
+import com.gridu.model.Event;
+import com.gridu.spark.utils.OffsetUtils;
+import com.gridu.spark.sql.EventDao;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.SparkSession;
 import org.apache.spark.streaming.Minutes;
 import org.apache.spark.streaming.Seconds;
 import org.apache.spark.streaming.api.java.JavaDStream;
@@ -20,19 +20,20 @@ import org.apache.spark.streaming.kafka010.LocationStrategies;
 import java.util.List;
 import java.util.Map;
 
-import static org.apache.spark.sql.functions.col;
-
 public class KafkaSinkEventStreamProcessor implements EventsProcessor {
 
     private List<String> topics;
     private Map<String, Object> props;
     public static final long CLICKS_THRESHOLD = 18;
     private JavaStreamingContext jsc;
+    private EventDao eventDao;
 
-    public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props,JavaStreamingContext jsc) {
+    public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props,
+                                         JavaStreamingContext jsc, EventDao eventDao) {
         this.topics = topics;
         this.props = props;
         this.jsc=jsc;
+        this.eventDao = eventDao;
     }
 
     public void process(boolean offsetsAutoCommit) {
@@ -43,13 +44,7 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
         JavaDStream<Event> events = stream.map(consumerRecord -> JsonConverter.fromJson(consumerRecord.value()))
                 .window(Minutes.apply(10), Seconds.apply(3));;
         events.foreachRDD((rdd, time) -> {
-            SparkSession session = SparkSession.builder()
-                    .sparkContext(jsc.sparkContext().sc())
-                    .getOrCreate();
-
-            Dataset<Event> eventsDS = session.createDataset(rdd.rdd(), Encoders.bean(Event.class));
-
-            Dataset<BotRegistry> botRegistryDS = findBots(eventsDS);
+            Dataset<BotRegistry> botRegistryDS = identifyBots(rdd.rdd());
             botRegistryDS.show();
             //TODO persist bot to blacklist
 
@@ -66,18 +61,8 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
         }
     }
 
-    public Dataset<BotRegistry> aggregateAndCountIpUrlActions(Dataset<Event> eventDataset) {
-        Dataset<BotRegistry> result = eventDataset.select(col("ip"), col("url"))
-                .groupBy(col("ip"),col("type"), col("url"))
-                .count().orderBy(col("count").desc())
-                .map(row -> new BotRegistry(row.getString(0),row.getString(1),row.getLong(2))
-                        , Encoders.bean(BotRegistry.class));
-        result.show();
-        return result;
-    }
-
-    public Dataset<BotRegistry> findBots(Dataset<Event> botRegistryDataset){
-        return aggregateAndCountIpUrlActions(botRegistryDataset)
+    public Dataset<BotRegistry> identifyBots(RDD<Event> rdd){
+        return eventDao.aggregateAndCountIpUrlActions(rdd)
                 .filter(botRegistry -> botRegistry.getNumberOfActions() > CLICKS_THRESHOLD);
 
     }

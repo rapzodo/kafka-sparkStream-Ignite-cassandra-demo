@@ -1,7 +1,7 @@
-package com.gridu.stopbot.spark.processors;
+package com.gridu.spark.processors;
 
 import com.google.common.collect.ImmutableMap;
-import com.gridu.stopbot.spark.processors.utils.OffsetUtils;
+import com.gridu.spark.utils.OffsetUtils;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.streaming.kafka010.KafkaUtils;
