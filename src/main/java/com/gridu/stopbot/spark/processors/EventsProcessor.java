@@ -1,6 +1,8 @@
 package com.gridu.stopbot.spark.processors;
 
-public interface EventsProcessor {
+import java.io.Serializable;
+
+public interface EventsProcessor extends Serializable{
 
     public void process(boolean offsetsAutoCommit);
 }

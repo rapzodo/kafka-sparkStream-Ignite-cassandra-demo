@@ -3,10 +3,12 @@ package com.gridu.stopbot.model;
 import com.gridu.stopbot.enums.EventType;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
+
+import java.io.Serializable;
 import java.util.Objects;
 
 @JsonPropertyOrder({"type","ip","unix_time","url"})
-public class Event {
+public class Event implements Serializable{
 
     @JsonProperty
     private EventType type;
