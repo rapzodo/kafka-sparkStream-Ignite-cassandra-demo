@@ -4,7 +4,7 @@ import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
-import org.apache.spark.rdd.RDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
@@ -35,14 +35,19 @@ public class EventDao {
         session = SparkSession.builder().config(sparkConf).getOrCreate();
     }
 
-    public Dataset<BotRegistry> aggregateAndCountIpUrlActions(RDD<Event> rdd) {
-        Dataset<Event> eventDS = session.createDataset(rdd, Encoders.bean(Event.class));
+    public Dataset<BotRegistry> findBots(JavaRDD<Event> rdd, long treshold) {
+        Dataset<Event> eventDS = session.createDataset(rdd.rdd(), Encoders.bean(Event.class));
         Dataset<BotRegistry> result = eventDS.select(col("ip"),col("type"), col("url"))
                 .groupBy(col("ip"),col("type"), col("url"))
-                .count().orderBy(col("count").desc())
-                .map(row -> new BotRegistry(row.getString(0),row.getString(2),row.getLong(3))
-                        , Encoders.bean(BotRegistry.class));
-        result.show();
+                .count()
+                .filter(col("count").gt(treshold))
+                .orderBy(col("count").desc())
+                .as(Encoders.bean(BotRegistry.class));
+        if(result != null)
+            result.show();
+        else
+            session.log().info("No BOTS WERE FOUND");
+        session.close();
         return result;
     }
 

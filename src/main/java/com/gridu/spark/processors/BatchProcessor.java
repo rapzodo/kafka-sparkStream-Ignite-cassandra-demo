@@ -22,7 +22,7 @@ public class BatchProcessor implements EventsProcessor {
 
     private String topic = "partners-events-topic";
 
-    public void process(boolean offsetsAutoCommit) {
+    public void process() {
 
         JavaSparkContext sc = new JavaSparkContext("local[*]", "appName2");
         sc.setLogLevel("ERROR");

@@ -6,14 +6,14 @@ import java.util.Objects;
 public class BotRegistry implements Serializable {
     private String ip;
     private String url;
-    private long numberOfActions;
+    private long count;
 
     public BotRegistry(){}
 
     public BotRegistry(String ip, String url, long numberOfClicks) {
         this.ip = ip;
         this.url = url;
-        this.numberOfActions = numberOfClicks;
+        this.count = numberOfClicks;
     }
 
     public String getIp() {
@@ -32,12 +32,12 @@ public class BotRegistry implements Serializable {
         this.url = url;
     }
 
-    public long getNumberOfActions() {
-        return numberOfActions;
+    public long getCount() {
+        return count;
     }
 
-    public void setNumberOfActions(long numberOfActions) {
-        this.numberOfActions = numberOfActions;
+    public void setCount(long count) {
+        this.count = count;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class BotRegistry implements Serializable {
         if (this == o) return true;
         if (!(o instanceof BotRegistry)) return false;
         BotRegistry that = (BotRegistry) o;
-        return getNumberOfActions() == that.getNumberOfActions() &&
+        return getCount() == that.getCount() &&
                 Objects.equals(getIp(), that.getIp()) &&
                 Objects.equals(getUrl(), that.getUrl());
     }
@@ -53,7 +53,7 @@ public class BotRegistry implements Serializable {
     @Override
     public int hashCode() {
 
-        return Objects.hash(getIp(), getUrl(), getNumberOfActions());
+        return Objects.hash(getIp(), getUrl(), getCount());
     }
 
     @Override
@@ -61,7 +61,7 @@ public class BotRegistry implements Serializable {
         return "BotRegistry{" +
                 "ip='" + ip + '\'' +
                 ", url='" + url + '\'' +
-                ", numberOfActions=" + numberOfActions +
+                ", count=" + count +
                 '}';
     }
 }

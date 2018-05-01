@@ -1,6 +1,7 @@
 import com.gridu.converters.JsonConverter;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
+import com.gridu.spark.helpers.SparkArtifactsHelper;
 import com.gridu.spark.sql.EventDao;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -21,10 +22,7 @@ public class EventDaoTest {
 
         String master = "local[*]";
         String appName = "eventdaoUnitTest";
-        SparkSession session = SparkSession.builder()
-                .master(master)
-                .appName(appName)
-                .getOrCreate();
+        SparkSession session = SparkArtifactsHelper.createSparkSession(master,appName);
 
         rows = session.read().option("header",true)
                 .text("./input/dataset").cache();
@@ -33,11 +31,13 @@ public class EventDaoTest {
     }
 
     @Test
-    public void testIpIUrlActionsAggregation(){
+    public void shouldAggregateFilterAndFindOneBot(){
         Dataset<Event> messages = rows.map(row -> JsonConverter.fromJson(row.getString(0)), Encoders.bean(Event.class));
-        Dataset<BotRegistry> result = dao.aggregateAndCountIpUrlActions(messages.toJavaRDD().rdd());
+        Dataset<BotRegistry> result = dao.findBots(messages.toJavaRDD(),18).cache();
+
         BotRegistry expected = new BotRegistry("148.67.43.14",
                 "http://9d345009-a-62cb3a1a-s-sites.googlegroups.com/index.html",19);
+        assertThat(result.count()).isEqualTo(1);
         assertThat(result.first()).isEqualTo(expected);
     }
 }

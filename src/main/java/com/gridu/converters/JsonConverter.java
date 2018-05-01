@@ -16,13 +16,13 @@ public class JsonConverter {
             jsonString = jsonString.replace("\\","/");
             return new ObjectMapper().readValue(jsonString,Event.class);
         } catch (IOException e) {
+            e.printStackTrace();
             LOG.error("Error parsing Json > event :" + jsonString, e);
         }
         return null;
     }
 
     public static String toJson(Event event){
-
         ObjectMapper mapper = new ObjectMapper();
         try {
             return mapper.writeValueAsString(event);

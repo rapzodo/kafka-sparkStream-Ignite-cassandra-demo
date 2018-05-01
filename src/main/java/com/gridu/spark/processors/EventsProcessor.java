@@ -4,5 +4,5 @@ import java.io.Serializable;
 
 public interface EventsProcessor extends Serializable{
 
-    public void process(boolean offsetsAutoCommit);
+    public void process();
 }

@@ -1,6 +1,5 @@
 package com.gridu.model;
 
-import com.gridu.enums.EventType;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
@@ -11,27 +10,27 @@ import java.util.Objects;
 public class Event implements Serializable{
 
     @JsonProperty
-    private EventType type;
+    private String type;
     @JsonProperty
-    private String ip;
+    private java.lang.String ip;
     @JsonProperty("unix_time")
     private long unixTime;
     @JsonProperty
-    private String url;
+    private java.lang.String url;
 
-    public EventType getType() {
+    public String getType() {
         return type;
     }
 
-    public void setType(EventType type) {
+    public void setType(String type) {
         this.type = type;
     }
 
-    public String getIp() {
+    public java.lang.String getIp() {
         return ip;
     }
 
-    public void setIp(String ip) {
+    public void setIp(java.lang.String ip) {
         this.ip = ip;
     }
 
@@ -43,11 +42,11 @@ public class Event implements Serializable{
         this.unixTime = unixTime;
     }
 
-    public String getUrl() {
+    public java.lang.String getUrl() {
         return url;
     }
 
-    public void setUrl(String url) {
+    public void setUrl(java.lang.String url) {
         this.url = url;
     }
 

@@ -10,6 +10,7 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.streaming.Duration;
+import org.apache.spark.streaming.Seconds;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.junit.After;
 import org.junit.Before;
@@ -33,7 +34,7 @@ public class KafkaSinkEventStreamProcessorTest{
 
     @Before
     public void setup(){
-        topics = Arrays.asList("partners-events-topic");
+        topics = Arrays.asList("events-topic");
         kafkaprops = ImmutableMap.<String, Object>builder()
                 .put("bootstrap.servers", "localhost:9092")
                 .put("key.deserializer", StringDeserializer.class)
@@ -42,28 +43,23 @@ public class KafkaSinkEventStreamProcessorTest{
                 .put("offsets.autocommit.enable", false)
                 .build();
 
-        javaStreamingContext = new JavaStreamingContext("local[*]", "stopbotUnittests", Duration.apply(3));
+        javaStreamingContext = new JavaStreamingContext("local[*]", "stopbotUnittests",
+                Seconds.apply(3));
 
-        rows = session.read().option("header",true).text("./input/dataset").cache();
+        session = SparkSession.builder().getOrCreate();
+
+//        rows = session.read().option("header",true).text("./input/dataset").cache();
 
         dao = new EventDao(javaStreamingContext.sparkContext().sc());
 
         processor = new KafkaSinkEventStreamProcessor(topics,kafkaprops, javaStreamingContext,dao);
     }
 
-    @Test
-    public void shouldAggregateFilterAndFindOneBot(){
-        Dataset<Event> messages = rows.map(row -> JsonConverter.fromJson(row.getString(0)), Encoders.bean(Event.class));
-        Dataset<BotRegistry> result = processor.identifyBots(messages.toJavaRDD().rdd()).cache();
 
-        assertThat(result.count()).isEqualTo(1);
-        assertThat(result.first().getIp()).isEqualTo("148.67.43.14");
-    }
 
     @Test
-    @Ignore
     public void testProcessing(){
-        processor.process(false);
+        processor.process();
     }
 
     @After
