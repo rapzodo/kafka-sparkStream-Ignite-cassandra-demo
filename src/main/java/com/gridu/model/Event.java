@@ -12,11 +12,20 @@ public class Event implements Serializable{
     @JsonProperty
     private String type;
     @JsonProperty
-    private java.lang.String ip;
+    private String ip;
     @JsonProperty("unix_time")
     private long unixTime;
     @JsonProperty
-    private java.lang.String url;
+    private String url;
+
+    public Event(){}
+
+    public Event(String type, String ip, long unixTime, String url) {
+        this.type = type;
+        this.ip = ip;
+        this.unixTime = unixTime;
+        this.url = url;
+    }
 
     public String getType() {
         return type;
@@ -26,7 +35,7 @@ public class Event implements Serializable{
         this.type = type;
     }
 
-    public java.lang.String getIp() {
+    public String getIp() {
         return ip;
     }
 
@@ -42,11 +51,11 @@ public class Event implements Serializable{
         this.unixTime = unixTime;
     }
 
-    public java.lang.String getUrl() {
+    public String getUrl() {
         return url;
     }
 
-    public void setUrl(java.lang.String url) {
+    public void setUrl(String url) {
         this.url = url;
     }
 
@@ -57,7 +66,7 @@ public class Event implements Serializable{
         if (!(o instanceof Event)) return false;
         Event event = (Event) o;
         return getUnixTime() == event.getUnixTime() &&
-                getType() == event.getType() &&
+                getType().equals(event.getType()) &&
                 Objects.equals(getIp(), event.getIp()) &&
                 Objects.equals(getUrl(), event.getUrl());
     }
@@ -66,5 +75,15 @@ public class Event implements Serializable{
     public int hashCode() {
 
         return Objects.hash(getType(), getIp(), getUnixTime(), getUrl());
+    }
+
+    @Override
+    public String toString() {
+        return "Event{" +
+                "type='" + type + '\'' +
+                ", ip='" + ip + '\'' +
+                ", unixTime=" + unixTime +
+                ", url='" + url + '\'' +
+                '}';
     }
 }
