@@ -31,10 +31,8 @@ public class StopBotJob {
                 .put("group.id", "bot-buster-consumers")
                 .put("offsets.autocommit.enable", false)
                 .put("auto.offset.reset", "earliest")
-//                .put("consumer.max.poll.interval.ms", 60000)
                 .put("consumer.session.timeout.ms", SESSION_TIMEOUT_MS)
-                .put("consumer.value.converter", "org.apache.kafka.connect.json.JsonConverter")
-//                .put("consumer.max.poll.records", BATCH_SIZE)
+                .put("consumer.max.poll.records", BATCH_SIZE)
                 .put("consumer.group.max.session.timeout.ms", SESSION_TIMEOUT_MS)
                 .put("consumer.heartbeat.interval.ms", HEARTBEAT_MS)
                 .build();

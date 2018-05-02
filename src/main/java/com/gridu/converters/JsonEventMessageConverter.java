@@ -1,15 +1,13 @@
 package com.gridu.converters;
 
 import com.gridu.model.Event;
-import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class JsonConverter {
+public class JsonEventMessageConverter {
     private static Logger LOG = LoggerFactory.getLogger(Event.class);
 
     private static ObjectMapper objectMapper = new ObjectMapper();

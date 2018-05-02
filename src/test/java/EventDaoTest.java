@@ -1,4 +1,4 @@
-import com.gridu.converters.JsonConverter;
+import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
@@ -32,7 +32,7 @@ public class EventDaoTest {
 
     @Test
     public void shouldAggregateFilterAndFindOneBot(){
-        Dataset<Event> messages = rows.map(row -> JsonConverter.fromJson(row.getString(0)), Encoders.bean(Event.class));
+        Dataset<Event> messages = rows.map(row -> JsonEventMessageConverter.fromJson(row.getString(0)), Encoders.bean(Event.class));
         Dataset<BotRegistry> result = dao.findBots(messages.toJavaRDD(),18).cache();
 
         BotRegistry expected = new BotRegistry("148.67.43.14",

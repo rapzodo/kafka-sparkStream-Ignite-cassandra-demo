@@ -1,20 +1,14 @@
 import com.google.common.collect.ImmutableMap;
-import com.gridu.converters.JsonConverter;
-import com.gridu.model.BotRegistry;
-import com.gridu.model.Event;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
 import com.gridu.spark.sql.EventDao;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.streaming.Duration;
 import org.apache.spark.streaming.Seconds;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;

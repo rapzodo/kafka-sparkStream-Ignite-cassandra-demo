@@ -1,6 +1,6 @@
 package com.gridu.spark.processors;
 
-import com.gridu.converters.JsonConverter;
+import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.spark.StopBotJob;
@@ -52,7 +52,7 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
             rdd.cache();
             if (rdd.count() > 0) {
                 System.out.println("--------Window: " + SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds())) + "-------");
-                JavaRDD<Event> eventsRDD = rdd.map(message -> JsonConverter.fromJson(message));
+                JavaRDD<Event> eventsRDD = rdd.map(message -> JsonEventMessageConverter.fromJson(message));
                 Dataset<BotRegistry> bots = eventDao.findBots(eventsRDD, ACTIONS_THRESHOLD);
 
                 //TODO persist bots to blacklist
