@@ -45,15 +45,14 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
                 ConsumerStrategies.Subscribe(topics, props));
 
 
-        JavaDStream<String> events = stream.map(consumerRecord -> consumerRecord.value())
+        JavaDStream<String> eventMessages = stream.map(consumerRecord -> consumerRecord.value())
                 .window(Milliseconds.apply(StopBotJob.WINDOW_MS));
 
-        events.foreachRDD((rdd, time) -> {
+        eventMessages.foreachRDD((rdd, time) -> {
             rdd.cache();
             if (rdd.count() > 0) {
-                System.out.println("--------Time: " + SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds())) + "-------");
-                JavaRDD<Event> eventsRDD = rdd.map(message ->
-                        JsonConverter.fromJson(message));
+                System.out.println("--------Window: " + SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds())) + "-------");
+                JavaRDD<Event> eventsRDD = rdd.map(message -> JsonConverter.fromJson(message));
                 Dataset<BotRegistry> bots = eventDao.findBots(eventsRDD, ACTIONS_THRESHOLD);
 
                 //TODO persist bots to blacklist
@@ -61,7 +60,8 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
             }
 
         });
-//        stream.foreachRDD(consumerRecordJavaRDD -> OffsetUtils.commitOffSets(consumerRecordJavaRDD, stream));
+
+        stream.foreachRDD(consumerRecordJavaRDD -> OffsetUtils.commitOffSets(consumerRecordJavaRDD, stream));
 
         jsc.start();
 

@@ -1,13 +1,12 @@
 package com.gridu.converters;
 
 import com.gridu.model.Event;
-import org.apache.commons.lang3.StringUtils;
-import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 
 public class JsonConverter {
