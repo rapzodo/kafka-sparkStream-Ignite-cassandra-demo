@@ -1,7 +1,7 @@
-package com.gridu.stopbot.spark.processing;
+package com.gridu.spark.processors;
 
 import com.google.common.collect.ImmutableMap;
-import com.gridu.stopbot.spark.processing.utils.OffsetUtils;
+import com.gridu.spark.utils.OffsetUtils;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.streaming.kafka010.KafkaUtils;
@@ -22,7 +22,7 @@ public class BatchProcessor implements EventsProcessor {
 
     private String topic = "partners-events-topic";
 
-    public void process(boolean offsetsAutoCommit) {
+    public void process() {
 
         JavaSparkContext sc = new JavaSparkContext("local[*]", "appName2");
         sc.setLogLevel("ERROR");

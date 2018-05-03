@@ -1,5 +1,4 @@
-import com.gridu.stopbot.spark.processing.utils.OffsetUtils;
-import org.apache.spark.sql.SparkSession;
+import com.gridu.spark.utils.OffsetUtils;
 import org.apache.spark.streaming.kafka010.OffsetRange;
 import org.junit.Test;
 import static org.junit.Assert.*;
