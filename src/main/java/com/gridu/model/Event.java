@@ -1,5 +1,6 @@
 package com.gridu.model;
 
+import org.apache.ignite.cache.query.annotations.QuerySqlField;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
@@ -12,10 +13,12 @@ public class Event implements Serializable{
     @JsonProperty
     private String type;
     @JsonProperty
+    @QuerySqlField(index = true)
     private String ip;
     @JsonProperty("unix_time")
     private long unixTime;
     @JsonProperty
+    @QuerySqlField(index = true)
     private String url;
 
     public Event(){}

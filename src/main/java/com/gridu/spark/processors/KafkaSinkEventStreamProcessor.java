@@ -1,10 +1,10 @@
 package com.gridu.spark.processors;
 
+import com.gridu.BaseDao;
 import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.spark.StopBotJob;
-import com.gridu.spark.sql.EventDao;
 import com.gridu.spark.utils.OffsetUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
@@ -28,10 +28,10 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
     private Map<String, Object> props;
     public static final long ACTIONS_THRESHOLD = 10;//1000
     private JavaStreamingContext jsc;
-    private EventDao eventDao;
+    private BaseDao eventDao;
 
     public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props,
-                                         JavaStreamingContext jsc, EventDao eventDao) {
+                                         JavaStreamingContext jsc, BaseDao eventDao) {
         this.topics = topics;
         this.props = props;
         this.jsc = jsc;
@@ -53,14 +53,16 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
             if (rdd.count() > 0) {
                 System.out.println("--------Window: " + SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds())) + "-------");
                 JavaRDD<Event> eventsRDD = rdd.map(message -> JsonEventMessageConverter.fromJson(message));
+
+                long start = System.currentTimeMillis();
                 Dataset<BotRegistry> bots = eventDao.findBots(eventsRDD, ACTIONS_THRESHOLD);
+                System.out.println("Exec time >>>>>> " + (System.currentTimeMillis() - start));
 
                 //TODO persist bots to blacklist
 
             }
 
         });
-
         stream.foreachRDD(consumerRecordJavaRDD -> OffsetUtils.commitOffSets(consumerRecordJavaRDD, stream));
 
         jsc.start();

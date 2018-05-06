@@ -26,7 +26,7 @@ public class JsonEventMessageConverter {
 //            }
             return objectMapper.readValue(jsonString,Event.class);
         } catch (IOException e) {
-            LOG.error("Error parsing Json > event :" + jsonString, e);
+            LOG.error("Error parsing event JsonMessage :" + jsonString, e);
         }
         return null;
     }

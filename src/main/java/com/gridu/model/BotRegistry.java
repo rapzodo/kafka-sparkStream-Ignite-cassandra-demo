@@ -1,11 +1,17 @@
 package com.gridu.model;
 
+import org.apache.ignite.cache.query.annotations.QuerySqlField;
+
 import java.io.Serializable;
 import java.util.Objects;
 
 public class BotRegistry implements Serializable {
-    private String ip;
+
+    @QuerySqlField(index = true)
     private String url;
+    @QuerySqlField(index = true)
+    private String ip;
+    @QuerySqlField(index = true)
     private long count;
 
     public BotRegistry(){}

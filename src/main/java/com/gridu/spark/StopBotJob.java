@@ -1,13 +1,11 @@
 package com.gridu.spark;
 
 import com.google.common.collect.ImmutableMap;
+import com.gridu.BaseDao;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
-import com.gridu.spark.sql.EventDao;
+import com.gridu.spark.sql.SparkSQLEventDao;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.SparkSession;
 import org.apache.spark.streaming.Milliseconds;
-import org.apache.spark.streaming.Seconds;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
 
 import java.util.Arrays;
@@ -23,7 +21,7 @@ public class StopBotJob {
     public static final long HEARTBEAT_MS = 20000;
 
     public static void main(String[] args) {
-        List<String> topics = Arrays.asList("events-topic");
+        List<String> topics = Arrays.asList("partners-events-topic");
         Map<String, Object> kafkaprops = ImmutableMap.<String, Object>builder()
                 .put("bootstrap.servers", "localhost:9092")
                 .put("key.deserializer", StringDeserializer.class)
@@ -40,7 +38,7 @@ public class StopBotJob {
         JavaStreamingContext javaStreamingContext = new JavaStreamingContext("local[*]", "stopbot",
                 Milliseconds.apply(POLL_MS));
 
-        EventDao dao = new EventDao(javaStreamingContext.sparkContext().sc());
+        BaseDao dao = new SparkSQLEventDao(javaStreamingContext.sparkContext().sc());
         KafkaSinkEventStreamProcessor processor = new KafkaSinkEventStreamProcessor(topics, kafkaprops, javaStreamingContext, dao);
 
         processor.process();
