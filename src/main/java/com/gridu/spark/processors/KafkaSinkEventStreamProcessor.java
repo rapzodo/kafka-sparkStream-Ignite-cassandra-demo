@@ -1,10 +1,11 @@
 package com.gridu.spark.processors;
 
-import com.gridu.BaseDao;
+import com.gridu.ignite.sql.IgniteDao;
 import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.spark.StopBotJob;
+import com.gridu.spark.sql.SparkSqlDao;
 import com.gridu.spark.utils.OffsetUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
@@ -28,10 +29,10 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
     private Map<String, Object> props;
     public static final long ACTIONS_THRESHOLD = 10;//1000
     private JavaStreamingContext jsc;
-    private BaseDao eventDao;
+    private SparkSqlDao<Event> eventDao;
 
     public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props,
-                                         JavaStreamingContext jsc, BaseDao eventDao) {
+                                         JavaStreamingContext jsc, SparkSqlDao<Event> eventDao) {
         this.topics = topics;
         this.props = props;
         this.jsc = jsc;

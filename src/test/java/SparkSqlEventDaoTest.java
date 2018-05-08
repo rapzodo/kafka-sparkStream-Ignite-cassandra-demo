@@ -6,8 +6,6 @@ import com.gridu.spark.sql.SparkSQLEventDao;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.SparkSession;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,7 +32,7 @@ public class SparkSqlEventDaoTest {
 
     @Test
     public void shouldReturnAllValidJsonMessagesAsEvents(){
-        assertThat(dao.getEventDataSet(mapToEventDataSet()).count()).isEqualTo(648556L);
+        assertThat(dao.getEventsDataSetFromJavaRdd(mapToEventDataSet()).count()).isEqualTo(648556L);
     }
 
     @Test

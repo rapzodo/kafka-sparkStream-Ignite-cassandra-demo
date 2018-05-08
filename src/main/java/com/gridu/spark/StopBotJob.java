@@ -1,9 +1,11 @@
 package com.gridu.spark;
 
 import com.google.common.collect.ImmutableMap;
-import com.gridu.BaseDao;
+import com.gridu.ignite.sql.IgniteDao;
+import com.gridu.model.Event;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
 import com.gridu.spark.sql.SparkSQLEventDao;
+import com.gridu.spark.sql.SparkSqlDao;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.streaming.Milliseconds;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
@@ -37,8 +39,7 @@ public class StopBotJob {
 
         JavaStreamingContext javaStreamingContext = new JavaStreamingContext("local[*]", "stopbot",
                 Milliseconds.apply(POLL_MS));
-
-        BaseDao dao = new SparkSQLEventDao(javaStreamingContext.sparkContext().sc());
+        SparkSqlDao<Event> dao = new SparkSQLEventDao(javaStreamingContext.sparkContext().sc());
         KafkaSinkEventStreamProcessor processor = new KafkaSinkEventStreamProcessor(topics, kafkaprops, javaStreamingContext, dao);
 
         processor.process();

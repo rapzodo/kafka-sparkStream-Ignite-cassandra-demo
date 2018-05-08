@@ -1,31 +1,55 @@
+import com.gridu.ignite.sql.IgniteDao;
 import com.gridu.converters.JsonEventMessageConverter;
-import com.gridu.spark.sql.IgniteEventDao;
+import com.gridu.ignite.sql.IgniteEventDao;
 import com.gridu.model.Event;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
+import org.apache.ignite.Ignite;
+import org.apache.ignite.Ignition;
+import org.apache.ignite.spark.JavaIgniteContext;
+import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.junit.Before;
-import org.junit.Test;
+import org.apache.spark.sql.Dataset;
+import org.junit.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class IgniteEventDaoTest {
 
-    private IgniteEventDao igniteDao;
-    private JavaSparkContext sc;
+    private static IgniteDao<Long, Event> igniteDao;
+    private static JavaSparkContext sc;
+    private static JavaRDD<Event> eventsRDD;
+    private static JavaIgniteRDD<Long, Event> igniteRdd;
 
-    @Before
-    public void setup(){
+    @BeforeClass
+    public static void setup() {
+        Ignition.start(IgniteEventDao.CONFIG_FILE);
+        Ignition.setClientMode(true);
         sc = SparkArtifactsHelper.createSparkContext("local[*]", "ignitedaotest");
-        igniteDao = new IgniteEventDao(sc);
+        igniteDao = new IgniteEventDao(new JavaIgniteContext(sc, "config/example-shared-rdd.xml"));
+        eventsRDD = sc.textFile("input/dataset")
+                .map(jsonString -> JsonEventMessageConverter.fromJson(jsonString)).cache();
+        sc.setLogLevel("ERROR");
+//        igniteDao.saveDataset(eventsRDD);
+    }
+
+
+    @Test
+    public void sholdSaveAllJavaRddToIgniteRDD() {
+        igniteRdd = igniteDao.createAnSaveIgniteRdd(eventsRDD);
+        assertThat(igniteRdd.count()).isEqualTo(eventsRDD.count());
     }
 
     @Test
-    public void shouldReturnOneBot(){
-        sc.setLogLevel("ERROR");
-        JavaRDD<Event> eventsRDD = sc.textFile("input/dataset")
-                .map(jsonString-> JsonEventMessageConverter.fromJson(jsonString));
-        assertThat(igniteDao.findBots(eventsRDD,18).count()).isEqualTo(1);
+    public void shouldSqlEventsDsFromJavaRdd() {
+        Dataset<Event> eventDataset = igniteDao.getEventsDataSetFromJavaRdd(igniteRdd);
+        assertThat(eventDataset.count()).isEqualTo(igniteRdd.count());
     }
 
+    @AfterClass
+    public static void cleanUp() {
+        igniteDao.closeResource();
+        Ignition.stop(true);
+    }
 }
+
