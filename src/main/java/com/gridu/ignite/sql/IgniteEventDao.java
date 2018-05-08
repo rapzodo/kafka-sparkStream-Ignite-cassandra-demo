@@ -24,42 +24,18 @@ import static org.apache.spark.sql.functions.col;
 public class IgniteEventDao implements IgniteDao<Long,Event> {
     public static final String CONFIG_FILE = "config/example-ignite.xml";
     public static final String EVENT_TABLE = "EVENT";
+    private static final String EVENTS_CACHE_NAME = "events";
     private JavaIgniteContext ic;
     private CacheConfiguration<Long, Event> eventsCache;
 
     public IgniteEventDao(JavaSparkContext sc) {
-        this.ic = new JavaIgniteContext(sc, IgniteConfiguration::new);
+        ic = new JavaIgniteContext(sc, IgniteConfiguration::new);
+        eventsCache = new CacheConfiguration<>(EVENTS_CACHE_NAME);
         eventsCache.setIndexedTypes(Long.class,Event.class);
     }
 
     @Override
-    public Dataset<Table> getDataTables(){
-        IgniteSparkSession igniteSession = IgniteSparkSession.builder()
-                .appName("Spark Ignite catalog example")
-                .master("local")
-                .config("spark.executor.instances", "2")
-                //Only additional option to refer to Ignite cluster.
-                .igniteConfig(CONFIG_FILE)
-                .getOrCreate();
-
-
-// This will print out info about all SQL tables existed in Ignite.
-       return igniteSession.catalog().listTables();
-    }
-
-    public void insertEvents(Dataset<Event> eventsDataset){
-
-    }
-
-    @Override
     public void persist(Dataset<Event> datasets){
-        datasets.write()
-                .format(IgniteDataFrameSettings.FORMAT_IGNITE())
-                .option(IgniteDataFrameSettings.OPTION_TABLE(), "EVENT")
-                .option(IgniteDataFrameSettings.OPTION_CONFIG_FILE(), CONFIG_FILE)
-                .option(IgniteDataFrameSettings.OPTION_CREATE_TABLE_PRIMARY_KEY_FIELDS(),"ip,datetime,url")
-                .mode(SaveMode.Ignore)
-                .save();
         IgniteDao.save(datasets, EVENT_TABLE, CONFIG_FILE,"ip,url", SaveMode.Append);
     }
 

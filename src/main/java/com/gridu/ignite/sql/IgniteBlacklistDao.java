@@ -16,11 +16,6 @@ public class IgniteBlacklistDao implements IgniteDao<Long, BotRegistry> {
 
 
     @Override
-    public Dataset<Table> getDataTables() {
-        return null;
-    }
-
-    @Override
     public void persist(Dataset<BotRegistry> datasets) {
         IgniteDao.save(datasets, "BLACKLIST",IgniteEventDao.CONFIG_FILE,"ip,url", SaveMode.Append);
     }

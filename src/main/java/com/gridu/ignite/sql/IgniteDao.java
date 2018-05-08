@@ -8,10 +8,23 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.catalog.Table;
+import org.apache.spark.sql.ignite.IgniteSparkSession;
 
 public interface IgniteDao<K,T> {
 
-    Dataset<Table> getDataTables();
+    static Dataset<Table> getDataTables(){
+        IgniteSparkSession igniteSession = IgniteSparkSession.builder()
+                .appName("Spark Ignite catalog example")
+                .master("local")
+                .config("spark.executor.instances", "2")
+                //Only additional option to refer to Ignite cluster.
+                .igniteConfig(IgniteEventDao.CONFIG_FILE)
+                .getOrCreate();
+
+
+// This will print out info about all SQL tables existed in Ignite.
+        return igniteSession.catalog().listTables();
+    }
 
     void persist(Dataset<T> datasets);
 
