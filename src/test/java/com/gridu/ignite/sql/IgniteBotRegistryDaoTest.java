@@ -72,14 +72,13 @@ public class IgniteBotRegistryDaoTest {
     @Test
     public void shouldSelectAllBotsFromBlacklist(){
         List<BotRegistry> allBots = igniteDao.getAllRecords();
-        assertThat(allBots).hasSize(2);
-        assertThat(allBots.get(0).getIp()).isEqualTo("123.456");
+        assertThat(allBots).hasSize(Long.valueOf(botRegistryDataset.count()).intValue());
     }
 
     @Test
     public void shouldReadDatasetFromIgnite(){
         Dataset<BotRegistry> botRegistryDataset = igniteDao.loadFromIgnite();
-        assertThat(botRegistryDataset).isNotNull();
+        assertThat(botRegistryDataset.count()).isEqualTo(botRegistryDataset.count());
     }
 
     private static Dataset<BotRegistry> createBotRegistryDataSet() {
