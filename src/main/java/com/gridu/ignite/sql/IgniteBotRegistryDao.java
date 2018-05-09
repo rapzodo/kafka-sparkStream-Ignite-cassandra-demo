@@ -35,7 +35,7 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
 
     @Override
     public void persist(Dataset<BotRegistry> datasets) {
-        IgniteDao.save(datasets, BOTREGISTRY_TABLE, IgniteEventDao.CONFIG_FILE,"ip,url", SaveMode.Append);
+        IgniteDao.save(datasets, BOTREGISTRY_TABLE, IgniteEventDao.CONFIG_FILE,"ip,url","template=partitioned",SaveMode.Append);
     }
 
     @Override

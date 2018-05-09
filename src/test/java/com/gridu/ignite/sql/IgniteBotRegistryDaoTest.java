@@ -1,6 +1,4 @@
 package com.gridu.ignite.sql;
-import com.gridu.ignite.sql.IgniteBotRegistryDao;
-import com.gridu.ignite.sql.IgniteDao;
 import com.gridu.model.BotRegistry;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import org.apache.ignite.Ignition;
@@ -11,10 +9,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 import org.jetbrains.annotations.NotNull;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -23,19 +18,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class IgniteBotRegistryDaoTest {
 
-    private static IgniteBotRegistryDao igniteDao;
-    private static JavaSparkContext sc;
-    private static JavaRDD<BotRegistry> botRegistryJavaRDD;
-    private static JavaIgniteRDD<Long, BotRegistry> igniteRdd;
-    private static Dataset<BotRegistry> botRegistryDataset;
+    private  static IgniteBotRegistryDao igniteDao;
+    private  static JavaSparkContext sc;
 
     @BeforeClass
-    public static void setup() {
+    public static void ignite(){
         startIgnite();
         sc = SparkArtifactsHelper.createSparkContext("local[*]", "botregistrydaotest");
         igniteDao = new IgniteBotRegistryDao(sc);
-        loadEventMessagesRdd();
         sc.setLogLevel("ERROR");
+    }
+
+    @AfterClass
+    public static void cleanUp(){
+        Ignition.stopAll(true);
+        igniteDao.closeResource();
+        sc.close();
     }
 
     private static void startIgnite() {
@@ -43,8 +41,8 @@ public class IgniteBotRegistryDaoTest {
         Ignition.setClientMode(true);
     }
 
-    private static void loadEventMessagesRdd() {
-        botRegistryJavaRDD = createBotRegistryDataSet().toJavaRDD();
+    private JavaRDD<BotRegistry> getBotRegistryRdd() {
+        return createBotRegistryDataSet().toJavaRDD();
     }
 
     @Test
@@ -59,20 +57,24 @@ public class IgniteBotRegistryDaoTest {
 
     @Test
     public void shouldSaveAllJavaRddToIgniteRDD() {
-        igniteRdd = igniteDao.createAnSaveIgniteRdd(botRegistryJavaRDD);
-        assertThat(igniteRdd.count()).isEqualTo(botRegistryJavaRDD.count());
+        JavaRDD<BotRegistry> botRegistryRdd = getBotRegistryRdd();
+        JavaIgniteRDD<Long, BotRegistry> igniteRdd = igniteDao.createAnSaveIgniteRdd(botRegistryRdd);
+        assertThat(igniteRdd.count()).isEqualTo(botRegistryRdd.count());
     }
 
     @Test
     public void shouldSelectBotsDsFromJavaRdd() {
-        botRegistryDataset = igniteDao.getDataSetFromJavaRdd(igniteRdd);
+        JavaIgniteRDD<Long, BotRegistry> igniteRdd = igniteDao.createAnSaveIgniteRdd(getBotRegistryRdd());
+        Dataset<BotRegistry> botRegistryDataset = igniteDao.getDataSetFromJavaRdd(igniteRdd);
         assertThat(botRegistryDataset.count()).isEqualTo(igniteRdd.count());
     }
 
     @Test
     public void shouldSelectAllBotsFromBlacklist(){
+        Dataset<BotRegistry> botRegistryDataSet = createBotRegistryDataSet();
+        igniteDao.persist(botRegistryDataSet);
         List<BotRegistry> allBots = igniteDao.getAllRecords();
-        assertThat(allBots).hasSize(Long.valueOf(botRegistryDataset.count()).intValue());
+        assertThat(allBots).hasSize(4);
     }
 
     @Test
@@ -81,21 +83,16 @@ public class IgniteBotRegistryDaoTest {
         assertThat(botRegistryDataset.count()).isEqualTo(botRegistryDataset.count());
     }
 
-    private static Dataset<BotRegistry> createBotRegistryDataSet() {
+    private  Dataset<BotRegistry> createBotRegistryDataSet() {
         SparkSession session = SparkSession.builder().sparkContext(sc.sc()).getOrCreate();
         return session.createDataset(createBotsList(), Encoders.bean(BotRegistry.class));
     }
 
     @NotNull
-    private static List<BotRegistry> createBotsList() {
+    private  List<BotRegistry> createBotsList() {
         return Arrays.asList(new BotRegistry("123.456", "http://imabot", 5000),
                 new BotRegistry("789.987", "http://imabot", 10000));
     }
 
-    @AfterClass
-    public static void cleanUp() {
-        igniteDao.closeResource();
-        Ignition.stop(true);
-    }
 }
 

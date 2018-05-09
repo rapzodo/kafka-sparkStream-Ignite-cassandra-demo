@@ -39,7 +39,7 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
 
     @Override
     public void persist(Dataset<Event> datasets){
-        IgniteDao.save(datasets, EVENT_TABLE, CONFIG_FILE,"ip,datetime,url", SaveMode.Append);
+        IgniteDao.save(datasets, EVENT_TABLE, CONFIG_FILE,"ip,datetime,url","template=replicated",SaveMode.Append);
     }
 
     @Override

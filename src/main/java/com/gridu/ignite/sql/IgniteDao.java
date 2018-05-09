@@ -29,13 +29,13 @@ public interface IgniteDao<K,T> {
         return igniteSession.catalog().listTables();
     }
 
-    static void save(Dataset dataset,String table, String configFile,String pKeys,SaveMode saveMode){
+    static void save(Dataset dataset,String table, String configFile,String pKeys,String tableParams,SaveMode saveMode){
         dataset.write()
                 .format(IgniteDataFrameSettings.FORMAT_IGNITE())
                 .option(IgniteDataFrameSettings.OPTION_TABLE(), table)
                 .option(IgniteDataFrameSettings.OPTION_CONFIG_FILE(), configFile)
                 .option(IgniteDataFrameSettings.OPTION_CREATE_TABLE_PRIMARY_KEY_FIELDS(),pKeys)
-                .option(IgniteDataFrameSettings.OPTION_CREATE_TABLE_PARAMETERS(),"template=replicated")
+                .option(IgniteDataFrameSettings.OPTION_CREATE_TABLE_PARAMETERS(),tableParams)
                 .mode(saveMode)
                 .save();
     }
