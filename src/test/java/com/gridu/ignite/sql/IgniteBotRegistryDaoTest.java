@@ -76,6 +76,12 @@ public class IgniteBotRegistryDaoTest {
         assertThat(allBots.get(0).getIp()).isEqualTo("123.456");
     }
 
+    @Test
+    public void shouldReadDatasetFromIgnite(){
+        Dataset<BotRegistry> botRegistryDataset = igniteDao.loadFromIgnite();
+        assertThat(botRegistryDataset).isNotNull();
+    }
+
     private static Dataset<BotRegistry> createBotRegistryDataSet() {
         SparkSession session = SparkSession.builder().sparkContext(sc.sc()).getOrCreate();
         return session.createDataset(createBotsList(), Encoders.bean(BotRegistry.class));
