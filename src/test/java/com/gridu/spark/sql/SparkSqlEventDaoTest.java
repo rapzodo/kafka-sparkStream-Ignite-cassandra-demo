@@ -1,3 +1,5 @@
+package com.gridu.spark.sql;
+
 import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;

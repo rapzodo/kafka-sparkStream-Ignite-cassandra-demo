@@ -1,3 +1,5 @@
+package com.gridu.spark;
+
 import com.google.common.collect.ImmutableMap;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
 import com.gridu.spark.sql.SparkSQLEventDao;

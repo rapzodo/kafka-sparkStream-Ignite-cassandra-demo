@@ -23,6 +23,10 @@ public class SparkArtifactsHelper {
         return SparkSession.builder().master(master).appName(appName).getOrCreate();
     }
 
+    public static SparkSession createSparkSession(JavaSparkContext javaSparkContext) {
+        return SparkSession.builder().sparkContext(javaSparkContext.sc()).getOrCreate();
+    }
+
     public static JavaStreamingContext createJavaStreamingContext(String master, String appName,long seconds) {
         SparkConf sparkConf = new SparkConf().setAppName(appName).setMaster(master);
         return new JavaStreamingContext(JavaSparkContext

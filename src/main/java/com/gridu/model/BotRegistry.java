@@ -8,9 +8,9 @@ import java.util.Objects;
 public class BotRegistry implements Serializable {
 
     @QuerySqlField(index = true)
-    private String url;
-    @QuerySqlField(index = true)
     private String ip;
+    @QuerySqlField(index = true)
+    private String url;
     @QuerySqlField(index = true)
     private long count;
 

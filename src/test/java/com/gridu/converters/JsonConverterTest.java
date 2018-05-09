@@ -1,3 +1,5 @@
+package com.gridu.converters;
+
 import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.Event;
 import org.apache.commons.lang3.StringUtils;

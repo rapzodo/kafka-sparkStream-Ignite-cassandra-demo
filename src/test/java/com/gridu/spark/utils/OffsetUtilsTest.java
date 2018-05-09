@@ -1,3 +1,5 @@
+package com.gridu.spark.utils;
+
 import com.gridu.spark.utils.OffsetUtils;
 import org.apache.spark.streaming.kafka010.OffsetRange;
 import org.junit.Test;
