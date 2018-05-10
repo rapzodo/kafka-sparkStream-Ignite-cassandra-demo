@@ -52,7 +52,7 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
 
 
     @Override
-    public Dataset<Event> getDataSetFromJavaRdd(JavaIgniteRDD<Long,Event> rdd) {
+    public Dataset<Event> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<Long,Event> rdd) {
         return rdd.sql("select * from " + EVENT_TABLE).as(Encoders.bean(Event.class));
     }
 

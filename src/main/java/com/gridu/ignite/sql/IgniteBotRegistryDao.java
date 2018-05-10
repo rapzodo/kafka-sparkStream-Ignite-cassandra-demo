@@ -44,7 +44,7 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
     }
 
     @Override
-    public Dataset<BotRegistry> getDataSetFromJavaRdd(JavaIgniteRDD<Long, BotRegistry> rdd) {
+    public Dataset<BotRegistry> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<Long, BotRegistry> rdd) {
         return rdd.sql("select * from "+ BOTREGISTRY_TABLE).as(Encoders.bean(BotRegistry.class));
     }
 

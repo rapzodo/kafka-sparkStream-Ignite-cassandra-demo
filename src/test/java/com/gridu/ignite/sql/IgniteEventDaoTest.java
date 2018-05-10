@@ -68,7 +68,7 @@ public class IgniteEventDaoTest {
     @Test
     public void shouldSqlEventsDsFromJavaRdd() {
         JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(sc.parallelize(createEventsList()));
-        Dataset<Event> dataSetFromJavaRdd = igniteDao.getDataSetFromJavaRdd(igniteRDD);
+        Dataset<Event> dataSetFromJavaRdd = igniteDao.getDataSetFromIgniteJavaRdd(igniteRDD);
         assertThat(igniteRDD.count()).isEqualTo(1);
         assertThat(dataSetFromJavaRdd.count()).isEqualTo(igniteRDD.count());
     }
@@ -76,14 +76,14 @@ public class IgniteEventDaoTest {
     @Test
     public void shouldAggregateAndCountIpUrlActionsAndOrderByDesc() {
         JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(eventJavaRDD);
-        Dataset<Row> bots = igniteDao.aggregateAndCountUrlActionsByIp(igniteDao.getDataSetFromJavaRdd(igniteRDD));
+        Dataset<Row> bots = igniteDao.aggregateAndCountUrlActionsByIp(igniteDao.getDataSetFromIgniteJavaRdd(igniteRDD));
         assertThat(bots.first().get(2)).isEqualTo(19L);
     }
 //
     @Test
     public void shouldIdentifyAndReturnOneBot(){
         JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(eventJavaRDD);
-        Dataset<Row> aggregatedDs = igniteDao.aggregateAndCountUrlActionsByIp(igniteDao.getDataSetFromJavaRdd(igniteRDD));
+        Dataset<Row> aggregatedDs = igniteDao.aggregateAndCountUrlActionsByIp(igniteDao.getDataSetFromIgniteJavaRdd(igniteRDD));
         Dataset<BotRegistry> bots = igniteDao.identifyBots(aggregatedDs,18);
         assertThat(bots.first().getCount()).isEqualTo(19);
         assertThat(bots.first().getIp()).isEqualTo("148.67.43.14");

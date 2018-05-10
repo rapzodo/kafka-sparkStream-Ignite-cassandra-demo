@@ -47,7 +47,7 @@ public interface IgniteDao<K,T> {
 
     JavaIgniteRDD<K, T> createAnSaveIgniteRdd(JavaRDD<T> rdd);
 
-    Dataset<T> getDataSetFromJavaRdd(JavaIgniteRDD<K,T> rdd);
+    Dataset<T> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<K,T> rdd);
 
     List<T> getAllRecords();
 

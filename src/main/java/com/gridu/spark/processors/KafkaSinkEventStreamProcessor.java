@@ -1,15 +1,19 @@
 package com.gridu.spark.processors;
 
-import com.gridu.ignite.sql.IgniteDao;
+import com.gridu.business.BotRegistryBusinessService;
+import com.gridu.business.EventsBusinessService;
 import com.gridu.converters.JsonEventMessageConverter;
+import com.gridu.ignite.sql.IgniteBotRegistryDao;
+import com.gridu.ignite.sql.IgniteEventDao;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.spark.StopBotJob;
-import com.gridu.spark.sql.SparkSqlDao;
 import com.gridu.spark.utils.OffsetUtils;
+import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.streaming.Milliseconds;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
@@ -27,17 +31,19 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
 
     private List<String> topics;
     private Map<String, Object> props;
-    public static final long ACTIONS_THRESHOLD = 10;//1000
     private JavaStreamingContext jsc;
-    private SparkSqlDao<Event> eventDao;
+    private BotRegistryBusinessService botRegistryBusinessService;
+    private EventsBusinessService eventsBusinessService;
 
     public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props,
-                                         JavaStreamingContext jsc, SparkSqlDao<Event> eventDao) {
+                                         JavaStreamingContext jsc,
+                                         BotRegistryBusinessService botRegistryBusinessService,
+                                         EventsBusinessService eventsBusinessService) {
         this.topics = topics;
         this.props = props;
         this.jsc = jsc;
-        this.eventDao = eventDao;
-        jsc.sparkContext().setLogLevel("ERROR");
+        this.botRegistryBusinessService = botRegistryBusinessService;
+        this.eventsBusinessService = eventsBusinessService;
     }
 
     public void process() {
@@ -53,10 +59,13 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
             rdd.cache();
             if (rdd.count() > 0) {
                 System.out.println("--------Window: " + SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds())) + "-------");
-                JavaRDD<Event> eventsRDD = rdd.map(message -> JsonEventMessageConverter.fromJson(message));
+                JavaRDD<Event> eventsRDD = rdd.map(JsonEventMessageConverter::fromJson);
 
                 long start = System.currentTimeMillis();
-                Dataset<BotRegistry> bots = eventDao.findBots(eventsRDD, ACTIONS_THRESHOLD);
+
+                final Dataset<BotRegistry> bots = eventsBusinessService.execute(eventsRDD);
+                if(bots.count() > 0) botRegistryBusinessService.execute(bots);
+
                 System.out.println("Exec time >>>>>> " + (System.currentTimeMillis() - start));
 
                 //TODO persist bots to blacklist
