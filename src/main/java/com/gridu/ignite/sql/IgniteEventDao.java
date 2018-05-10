@@ -18,7 +18,6 @@ import scala.Tuple2;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.apache.spark.sql.functions.col;
@@ -26,7 +25,7 @@ import static org.apache.spark.sql.functions.col;
 public class IgniteEventDao implements IgniteDao<Long,Event> {
     public static final String CONFIG_FILE = "config/example-ignite.xml";
     public static final String EVENT_TABLE = "EVENT";
-    private static final String EVENTS_CACHE_NAME = "events";
+    public static final String EVENTS_CACHE_NAME = "events";
     private JavaIgniteContext<Long,Event> ic;
     private CacheConfiguration<Long, Event> eventsCacheCfg;
 
@@ -46,9 +45,10 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
     public JavaIgniteRDD<Long, Event> createAnSaveIgniteRdd(JavaRDD<Event> rdd){
         JavaIgniteRDD<Long, Event> igniteRDD = ic.<Long,Event>fromCache(eventsCacheCfg);
         igniteRDD.clear();
-        igniteRDD.savePairs(rdd.mapToPair(event -> new Tuple2<>(UUID.randomUUID().getLeastSignificantBits(),event)));
+        igniteRDD.savePairs(rdd.mapToPair(event -> new Tuple2<>(IgniteDao.generateIgniteUuid(),event)));
         return igniteRDD;
     }
+
 
 
     @Override
@@ -56,8 +56,8 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
         return rdd.sql("select * from " + EVENT_TABLE).as(Encoders.bean(Event.class));
     }
 
-    public Dataset<Row> aggregateAndCountUrlActionsByIp(JavaIgniteRDD<Long,Event> rdd){
-        return getDataSetFromJavaRdd(rdd)
+    public Dataset<Row> aggregateAndCountUrlActionsByIp(Dataset<Event> eventDataset){
+        return eventDataset
                 .groupBy(col("ip"),col("url"))
                 .count()
                 .orderBy(col("count").desc());

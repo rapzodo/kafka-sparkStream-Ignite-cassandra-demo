@@ -1,8 +1,6 @@
 package com.gridu.ignite.sql;
 
 import com.gridu.converters.JsonEventMessageConverter;
-import com.gridu.ignite.sql.IgniteDao;
-import com.gridu.ignite.sql.IgniteEventDao;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
@@ -29,17 +27,15 @@ public class IgniteEventDaoTest {
 
     private static IgniteEventDao igniteDao;
     private static JavaSparkContext sc;
-    private static JavaRDD<Event> eventsRDD;
-    private static JavaIgniteRDD<Long, Event> igniteRdd;
-    private static Dataset<Event> eventDataset;
+    private static JavaRDD<Event> eventJavaRDD;
 
     @BeforeClass
     public static void setup() {
         startIgnite();
         sc = SparkArtifactsHelper.createSparkContext("local[*]", "igniteeventdaotest");
         igniteDao = new IgniteEventDao(sc);
-        loadEventMessagesRdd();
         sc.setLogLevel("ERROR");
+        eventJavaRDD = loadEventMessagesRdd();
     }
 
     private static void startIgnite() {
@@ -47,15 +43,15 @@ public class IgniteEventDaoTest {
         Ignition.setClientMode(true);
     }
 
-    private static void loadEventMessagesRdd() {
-        eventsRDD = sc.textFile("input/dataset")
-                .map(jsonString -> JsonEventMessageConverter.fromJson(jsonString)).cache();
+    private static JavaRDD<Event> loadEventMessagesRdd() {
+        return sc.textFile("input/dataset")
+                .map(JsonEventMessageConverter::fromJson).cache();
     }
 
     @Test
     public void shouldCreateTableAndPersistBotInBlackList() {
         Dataset<Event> bots = SparkSession.builder().sparkContext(sc.sc()).getOrCreate()
-                .createDataset(eventsRDD.take(5), Encoders.bean(Event.class));
+                .createDataset(eventJavaRDD.take(5), Encoders.bean(Event.class));
         igniteDao.persist(bots);
 
         assertThat(IgniteDao.getDataTables().first().name())
@@ -65,26 +61,30 @@ public class IgniteEventDaoTest {
 
     @Test
     public void shouldSaveAllJavaRddToIgniteRDD() {
-        igniteRdd = igniteDao.createAnSaveIgniteRdd(eventsRDD);
-        assertThat(igniteRdd.count()).isEqualTo(eventsRDD.count());
+        JavaIgniteRDD<Long, Event> igniteRdd = igniteDao.createAnSaveIgniteRdd(sc.parallelize(createEventsList()));
+        assertThat(igniteRdd.count()).isEqualTo(1);
     }
 
     @Test
     public void shouldSqlEventsDsFromJavaRdd() {
-        eventDataset = igniteDao.getDataSetFromJavaRdd(igniteRdd);
-        assertThat(eventDataset.count()).isEqualTo(igniteRdd.count());
+        JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(sc.parallelize(createEventsList()));
+        Dataset<Event> dataSetFromJavaRdd = igniteDao.getDataSetFromJavaRdd(igniteRDD);
+        assertThat(igniteRDD.count()).isEqualTo(1);
+        assertThat(dataSetFromJavaRdd.count()).isEqualTo(igniteRDD.count());
     }
 
     @Test
-    public void shouldAggregateAndCountIpUrlActionsAndOrderByDesc(){
-        Dataset<Row> bots = igniteDao.aggregateAndCountUrlActionsByIp(igniteRdd);
+    public void shouldAggregateAndCountIpUrlActionsAndOrderByDesc() {
+        JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(eventJavaRDD);
+        Dataset<Row> bots = igniteDao.aggregateAndCountUrlActionsByIp(igniteDao.getDataSetFromJavaRdd(igniteRDD));
         assertThat(bots.first().get(2)).isEqualTo(19L);
     }
-
+//
     @Test
     public void shouldIdentifyAndReturnOneBot(){
-        Dataset<Row> botRegistryDataset = igniteDao.aggregateAndCountUrlActionsByIp(igniteRdd);
-        Dataset<BotRegistry> bots = igniteDao.identifyBots(botRegistryDataset,18);
+        JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(eventJavaRDD);
+        Dataset<Row> aggregatedDs = igniteDao.aggregateAndCountUrlActionsByIp(igniteDao.getDataSetFromJavaRdd(igniteRDD));
+        Dataset<BotRegistry> bots = igniteDao.identifyBots(aggregatedDs,18);
         assertThat(bots.first().getCount()).isEqualTo(19);
         assertThat(bots.first().getIp()).isEqualTo("148.67.43.14");
     }
@@ -92,7 +92,7 @@ public class IgniteEventDaoTest {
     @Test
     public void shouldSelectAllEventsFromEventTable(){
         List<Event> eventsList = createEventsList();
-        igniteRdd = igniteDao.createAnSaveIgniteRdd(sc.parallelize(eventsList));
+        igniteDao.createAnSaveIgniteRdd(sc.parallelize(eventsList));
         List<Event> events = igniteDao.getAllRecords();
         assertThat(events).hasSize(1);
         assertThat(events.get(0).getIp()).isEqualTo("123.345");
@@ -107,6 +107,7 @@ public class IgniteEventDaoTest {
     public static void cleanUp() {
         igniteDao.closeResource();
         Ignition.stop(true);
+        sc.close();
     }
 }
 

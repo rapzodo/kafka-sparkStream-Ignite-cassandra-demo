@@ -1,16 +1,15 @@
 package com.gridu.ignite.sql;
 
 import com.gridu.model.BotRegistry;
+import org.apache.ignite.lang.IgniteUuid;
 import org.apache.ignite.spark.IgniteDataFrameSettings;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.ignite.IgniteSparkSession;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public interface IgniteDao<K,T> {
@@ -40,9 +39,13 @@ public interface IgniteDao<K,T> {
                 .save();
     }
 
+    static long generateIgniteUuid() {
+        return IgniteUuid.randomUuid().localId();
+    }
+
     void persist(Dataset<T> datasets);
 
-    JavaIgniteRDD<K,T> createAnSaveIgniteRdd(JavaRDD<T> rdd);
+    JavaIgniteRDD<K, T> createAnSaveIgniteRdd(JavaRDD<T> rdd);
 
     Dataset<T> getDataSetFromJavaRdd(JavaIgniteRDD<K,T> rdd);
 

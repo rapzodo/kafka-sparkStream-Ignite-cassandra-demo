@@ -5,7 +5,6 @@ import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.spark.IgniteDataFrameSettings;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
@@ -15,7 +14,6 @@ import scala.Tuple2;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import static org.apache.ignite.spark.IgniteDataFrameSettings.*;
 
@@ -41,7 +39,7 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
     @Override
     public JavaIgniteRDD<Long, BotRegistry> createAnSaveIgniteRdd(JavaRDD<BotRegistry> rdd) {
         JavaIgniteRDD<Long, BotRegistry> igniteRDD = ic.<Long,BotRegistry>fromCache(cacheConfiguration);
-        igniteRDD.savePairs(rdd.mapToPair(event -> new Tuple2<>(UUID.randomUUID().getLeastSignificantBits(),event)));
+        igniteRDD.savePairs(rdd.mapToPair(botRegistry -> new Tuple2<>(IgniteDao.generateIgniteUuid(),botRegistry)));
         return igniteRDD;
     }
 

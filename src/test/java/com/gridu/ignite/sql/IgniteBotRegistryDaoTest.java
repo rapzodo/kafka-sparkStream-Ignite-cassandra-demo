@@ -2,6 +2,8 @@ package com.gridu.ignite.sql;
 import com.gridu.model.BotRegistry;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import org.apache.ignite.Ignition;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -22,19 +24,17 @@ public class IgniteBotRegistryDaoTest {
     private  static JavaSparkContext sc;
 
     @BeforeClass
-    public static void ignite(){
+    public static void setup(){
         startIgnite();
         sc = SparkArtifactsHelper.createSparkContext("local[*]", "botregistrydaotest");
         igniteDao = new IgniteBotRegistryDao(sc);
         sc.setLogLevel("ERROR");
     }
 
-    @AfterClass
-    public static void cleanUp(){
-        Ignition.stopAll(true);
-        igniteDao.closeResource();
-        sc.close();
-    }
+//    @After
+//    public void clearCache() {
+//        Ignition.ignite().cache(IgniteBotRegistryDao.BOTREGISTRY_CACHE).clear();
+//    }
 
     private static void startIgnite() {
         Ignition.start();
@@ -94,5 +94,11 @@ public class IgniteBotRegistryDaoTest {
                 new BotRegistry("789.987", "http://imabot", 10000));
     }
 
+    @AfterClass
+    public static void cleanUp(){
+        Ignition.stopAll(true);
+        igniteDao.closeResource();
+        sc.close();
+    }
 }
 
