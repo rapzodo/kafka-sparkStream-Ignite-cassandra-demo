@@ -73,16 +73,13 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
 
                 JavaRDD<Event> eventsRDD = rdd.map(JsonEventMessageConverter::fromJson);
 
-                final Dataset<BotRegistry> bots = eventsBusinessService.execute(eventsRDD).cache();
+                final Dataset<Row> bots = eventsBusinessService.execute(eventsRDD).cache();
 
                 final long bostsCount = bots.count();
 
-                logger.info("!!! It was identifid {} bots !!!",bostsCount);
-                bots.show();
-
                 if (bostsCount > 0) {
                     botRegistryBusinessService.execute(bots);
-                    logger.info("!!! {} BOTS INCLUDED IN BLACKLIST !!!",bostsCount);
+                    logger.info("!!! {} BOTS IN BLACKLIST !!!",bostsCount);
                 }
 
             }

@@ -1,11 +1,14 @@
 package com.gridu.ignite.sql;
 
 import com.gridu.model.BotRegistry;
+import com.gridu.model.Event;
 import org.apache.ignite.lang.IgniteUuid;
 import org.apache.ignite.spark.IgniteDataFrameSettings;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.ignite.IgniteSparkSession;
@@ -48,6 +51,8 @@ public interface IgniteDao<K,T> {
     JavaIgniteRDD<K, T> createAnSaveIgniteRdd(JavaRDD<T> rdd);
 
     Dataset<T> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<K,T> rdd);
+
+    Dataset<Row> aggregateAndCount(Dataset<Event> eventDataset, Column... groupedCols);
 
     List<T> getAllRecords();
 

@@ -1,6 +1,7 @@
 package com.gridu.ignite.sql;
 
 import com.gridu.model.BotRegistry;
+import com.gridu.model.Event;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -15,6 +16,7 @@ import scala.Tuple2;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import static org.apache.ignite.spark.IgniteDataFrameSettings.*;
 
 public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
@@ -24,11 +26,11 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
     private JavaIgniteContext<Long,BotRegistry> ic;
     private CacheConfiguration<Long,BotRegistry> cacheConfiguration;
 
-    public IgniteBotRegistryDao(JavaSparkContext javaSparkContext) {
+    public IgniteBotRegistryDao(JavaIgniteContext javaIgniteContext) {
         cacheConfiguration = new CacheConfiguration<>(BOTREGISTRY_CACHE);
         cacheConfiguration.setIndexedTypes(Long.class, BotRegistry.class);
 //        cacheConfiguration.setSqlSchema("PUBLIC");
-        ic = new JavaIgniteContext<>(javaSparkContext, IgniteConfiguration::new);
+        ic = javaIgniteContext;
     }
 
     @Override
@@ -46,6 +48,11 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
     @Override
     public Dataset<BotRegistry> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<Long, BotRegistry> rdd) {
         return rdd.sql("select * from "+ BOTREGISTRY_TABLE).as(Encoders.bean(BotRegistry.class));
+    }
+
+    @Override
+    public Dataset<Row> aggregateAndCount(Dataset<Event> eventDataset, Column... groupedCols) {
+        return eventDataset.groupBy(groupedCols).count().orderBy("ip");
     }
 
     @Override

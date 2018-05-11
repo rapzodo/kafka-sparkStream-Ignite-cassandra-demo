@@ -10,10 +10,7 @@ import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.*;
 import scala.Tuple2;
 
 import java.util.ArrayList;
@@ -51,22 +48,19 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
 
 
 
+
     @Override
     public Dataset<Event> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<Long,Event> rdd) {
         return rdd.sql("select * from " + EVENT_TABLE).as(Encoders.bean(Event.class));
     }
 
-    public Dataset<Row> aggregateAndCountUrlActionsByIp(Dataset<Event> eventDataset){
+    @Override
+    public Dataset<Row> aggregateAndCount(Dataset<Event> eventDataset, Column... groupedCols){
         return eventDataset
-                .groupBy(col("ip"),col("url"))
+                .groupBy(groupedCols)
+//                .groupBy(col("ip"),col("url"))
                 .count()
                 .orderBy(col("count").desc());
-    }
-
-    public Dataset<BotRegistry> identifyBots(Dataset<Row> aggregatedDs, long threshold) {
-        return aggregatedDs
-                .filter(col("count").gt(threshold))
-                .as(Encoders.bean(BotRegistry.class));
     }
 
     @Override
