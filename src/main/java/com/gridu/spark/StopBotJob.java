@@ -33,18 +33,7 @@ public class StopBotJob {
         try(Ignite ignite = Ignition.start()) {
             Ignition.setClientMode(true);
             List<String> topics = Arrays.asList("partners-events-topic");
-            Map<String, Object> kafkaprops = ImmutableMap.<String, Object>builder()
-                    .put("bootstrap.servers", "localhost:9092")
-                    .put("key.deserializer", StringDeserializer.class)
-                    .put("value.deserializer", StringDeserializer.class)
-                    .put("group.id", "bot-buster-consumers")
-                    .put("offsets.autocommit.enable", false)
-                    .put("consumer.auto.offset.reset", "earliest")
-                    .put("consumer.session.timeout.ms", SESSION_TIMEOUT_MS)
-                    .put("consumer.max.poll.records", BATCH_SIZE)
-                    .put("consumer.group.max.session.timeout.ms", SESSION_TIMEOUT_MS)
-                    .put("consumer.heartbeat.interval.ms", HEARTBEAT_MS)
-                    .build();
+            Map<String, Object> kafkaProps = getConfiguration();
 
             JavaStreamingContext javaStreamingContext = new JavaStreamingContext("local[*]", "stopbot",
                     Milliseconds.apply(POLL_MS));
@@ -54,12 +43,28 @@ public class StopBotJob {
 
             final IgniteBotRegistryDao botRegistryDao = new IgniteBotRegistryDao(igniteContext);
             BotRegistryBusinessService botRegistryBusinessService = new BotRegistryBusinessService(botRegistryDao);
-            final IgniteEventDao eventDao = new IgniteEventDao(javaStreamingContext.sparkContext());
+
+            final IgniteEventDao eventDao = new IgniteEventDao(igniteContext);
             EventsBusinessService eventsBusinessService = new EventsBusinessService(eventDao);
-            KafkaSinkEventStreamProcessor processor = new KafkaSinkEventStreamProcessor(topics, kafkaprops, javaStreamingContext,
+            KafkaSinkEventStreamProcessor processor = new KafkaSinkEventStreamProcessor(topics, kafkaProps, javaStreamingContext,
                     eventsBusinessService, botRegistryBusinessService);
 
             processor.process();
         }
+    }
+
+    private static ImmutableMap<String, Object> getConfiguration() {
+        return ImmutableMap.<String, Object>builder()
+                .put("bootstrap.servers", "localhost:9092")
+                .put("key.deserializer", StringDeserializer.class)
+                .put("value.deserializer", StringDeserializer.class)
+                .put("group.id", "bot-buster-consumers")
+                .put("offsets.autocommit.enable", false)
+                .put("consumer.auto.offset.reset", "earliest")
+                .put("consumer.session.timeout.ms", SESSION_TIMEOUT_MS)
+                .put("consumer.max.poll.records", BATCH_SIZE)
+                .put("consumer.group.max.session.timeout.ms", SESSION_TIMEOUT_MS)
+                .put("consumer.heartbeat.interval.ms", HEARTBEAT_MS)
+                .build();
     }
 }

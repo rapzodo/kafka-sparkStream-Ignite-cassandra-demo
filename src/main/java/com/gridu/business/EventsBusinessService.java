@@ -2,18 +2,16 @@ package com.gridu.business;
 
 import com.gridu.ignite.sql.IgniteDao;
 import com.gridu.ignite.sql.IgniteEventDao;
-import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.apache.spark.sql.functions.*;
 
-public class EventsBusinessService implements BusinessService<JavaRDD<Event>,Dataset<Row>> {
+public class EventsBusinessService implements StopBotBusinessService<JavaRDD<Event>,Dataset<Row>> {
 
     private IgniteDao dao;
     private Logger logger = LoggerFactory.getLogger(getClass());

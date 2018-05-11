@@ -5,21 +5,19 @@ import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import org.apache.ignite.Ignition;
+import org.apache.ignite.cache.CacheEntry;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.*;
 import org.jetbrains.annotations.NotNull;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,12 +26,14 @@ public class IgniteEventDaoTest {
     private static IgniteEventDao igniteDao;
     private static JavaSparkContext sc;
     private static JavaRDD<Event> eventJavaRDD;
+    private static JavaIgniteContext ic;
 
     @BeforeClass
     public static void setup() {
         startIgnite();
         sc = SparkArtifactsHelper.createSparkContext("local[*]", "igniteeventdaotest");
-        igniteDao = new IgniteEventDao(sc);
+        ic = new JavaIgniteContext(sc,IgniteConfiguration::new);
+        igniteDao = new IgniteEventDao(ic);
         sc.setLogLevel("ERROR");
         eventJavaRDD = loadEventMessagesRdd();
     }
@@ -76,11 +76,18 @@ public class IgniteEventDaoTest {
     @Test
     public void shouldAggregateAndCountIpUrlActionsAndOrderByDesc() {
         JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(eventJavaRDD);
-        Dataset<Row> bots = igniteDao.aggregateAndCount(igniteDao.getDataSetFromIgniteJavaRdd(igniteRDD));
-        assertThat(bots.first().get(2)).isEqualTo(19L);
+        Dataset<Row> aggregatedDS = igniteDao.aggregateAndCount(igniteDao.getDataSetFromIgniteJavaRdd(igniteRDD),
+                functions.col("ip"),functions.col("url")).cache();
+        aggregatedDS.show();
+        assertThat(aggregatedDS.first().get(2)).isEqualTo(19L);
     }
-//
 
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowIllegalArgumentExceptionWhenNoColumnsAreProvided(){
+        final Dataset<Event> eventDataset = SparkArtifactsHelper.createSparkSession(sc)
+                .createDataset(Collections.singletonList(new Event()), Encoders.bean(Event.class));
+        igniteDao.aggregateAndCount(eventDataset);
+    }
 
     @Test
     public void shouldSelectAllEventsFromEventTable(){

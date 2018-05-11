@@ -15,7 +15,19 @@ import org.apache.spark.sql.ignite.IgniteSparkSession;
 
 import java.util.List;
 
+import static org.apache.spark.sql.functions.col;
+
 public interface IgniteDao<K,T> {
+
+    default Dataset<Row> aggregateAndCount(Dataset<Event> eventDataset, Column... groupedCols){
+        if(groupedCols == null || groupedCols.length == 0){
+            throw new IllegalArgumentException("at least on column should be provided");
+        }
+        return eventDataset
+                .groupBy(groupedCols)
+                .count()
+                .orderBy(col("count").desc());
+    }
 
     static Dataset<Table> getDataTables(){
         IgniteSparkSession igniteSession = IgniteSparkSession.builder()
@@ -51,8 +63,6 @@ public interface IgniteDao<K,T> {
     JavaIgniteRDD<K, T> createAnSaveIgniteRdd(JavaRDD<T> rdd);
 
     Dataset<T> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<K,T> rdd);
-
-    Dataset<Row> aggregateAndCount(Dataset<Event> eventDataset, Column... groupedCols);
 
     List<T> getAllRecords();
 

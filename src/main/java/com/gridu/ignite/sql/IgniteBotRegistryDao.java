@@ -51,11 +51,6 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
     }
 
     @Override
-    public Dataset<Row> aggregateAndCount(Dataset<Event> eventDataset, Column... groupedCols) {
-        return eventDataset.groupBy(groupedCols).count().orderBy("ip");
-    }
-
-    @Override
     public List<BotRegistry> getAllRecords(){
         IgniteCache<Long, BotRegistry> blacklistCache = ic.ignite().getOrCreateCache(cacheConfiguration);
 

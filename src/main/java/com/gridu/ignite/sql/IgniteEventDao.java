@@ -1,6 +1,5 @@
 package com.gridu.ignite.sql;
 
-import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
@@ -26,8 +25,8 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
     private JavaIgniteContext<Long,Event> ic;
     private CacheConfiguration<Long, Event> eventsCacheCfg;
 
-    public IgniteEventDao(JavaSparkContext sc) {
-        ic = new JavaIgniteContext(sc, IgniteConfiguration::new);
+    public IgniteEventDao(JavaIgniteContext ic) {
+        this.ic = ic;
         eventsCacheCfg = new CacheConfiguration<>(EVENTS_CACHE_NAME);
         eventsCacheCfg.setIndexedTypes(Long.class,Event.class);
 //        eventsCacheCfg.setSqlSchema("PUBLIC");
@@ -52,15 +51,6 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
     @Override
     public Dataset<Event> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<Long,Event> rdd) {
         return rdd.sql("select * from " + EVENT_TABLE).as(Encoders.bean(Event.class));
-    }
-
-    @Override
-    public Dataset<Row> aggregateAndCount(Dataset<Event> eventDataset, Column... groupedCols){
-        return eventDataset
-                .groupBy(groupedCols)
-//                .groupBy(col("ip"),col("url"))
-                .count()
-                .orderBy(col("count").desc());
     }
 
     @Override
