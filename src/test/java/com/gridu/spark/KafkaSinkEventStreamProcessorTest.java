@@ -48,7 +48,7 @@ public class KafkaSinkEventStreamProcessorTest{
 
         dao = new SparkSQLEventDao(javaStreamingContext.sparkContext().sc());
 
-        processor = new KafkaSinkEventStreamProcessor(topics,kafkaprops, javaStreamingContext,dao);
+//        processor = new KafkaSinkEventStreamProcessor(topics,kafkaprops, javaStreamingContext,dao);
     }
 
 

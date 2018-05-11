@@ -9,6 +9,9 @@ import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.spark.StopBotJob;
 import com.gridu.spark.utils.OffsetUtils;
+import org.apache.ignite.Ignite;
+import org.apache.ignite.Ignition;
+import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
@@ -21,6 +24,8 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka010.ConsumerStrategies;
 import org.apache.spark.streaming.kafka010.KafkaUtils;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -28,6 +33,8 @@ import java.util.List;
 import java.util.Map;
 
 public class KafkaSinkEventStreamProcessor implements EventsProcessor {
+
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
     private List<String> topics;
     private Map<String, Object> props;
@@ -37,8 +44,8 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
 
     public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props,
                                          JavaStreamingContext jsc,
-                                         BotRegistryBusinessService botRegistryBusinessService,
-                                         EventsBusinessService eventsBusinessService) {
+                                         EventsBusinessService eventsBusinessService,
+                                         BotRegistryBusinessService botRegistryBusinessService) {
         this.topics = topics;
         this.props = props;
         this.jsc = jsc;
@@ -47,6 +54,8 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
     }
 
     public void process() {
+        jsc.sparkContext().setLogLevel("INFO");
+
         JavaInputDStream<ConsumerRecord<String, String>> stream = KafkaUtils.createDirectStream(jsc,
                 LocationStrategies.PreferConsistent(),
                 ConsumerStrategies.Subscribe(topics, props));
@@ -58,17 +67,23 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
         eventMessages.foreachRDD((rdd, time) -> {
             rdd.cache();
             if (rdd.count() > 0) {
-                System.out.println("--------Window: " + SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds())) + "-------");
+
+                final String formattedString = SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds()));
+                logger.info("--------Window: {} -----------", formattedString);
+
                 JavaRDD<Event> eventsRDD = rdd.map(JsonEventMessageConverter::fromJson);
 
-                long start = System.currentTimeMillis();
+                final Dataset<BotRegistry> bots = eventsBusinessService.execute(eventsRDD).cache();
 
-                final Dataset<BotRegistry> bots = eventsBusinessService.execute(eventsRDD);
-                if(bots.count() > 0) botRegistryBusinessService.execute(bots);
+                final long bostsCount = bots.count();
 
-                System.out.println("Exec time >>>>>> " + (System.currentTimeMillis() - start));
+                logger.info("!!! It was identifid {} bots !!!",bostsCount);
+                bots.show();
 
-                //TODO persist bots to blacklist
+                if (bostsCount > 0) {
+                    botRegistryBusinessService.execute(bots);
+                    logger.info("!!! {} BOTS INCLUDED IN BLACKLIST !!!",bostsCount);
+                }
 
             }
 
@@ -79,6 +94,7 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
 
         try {
             jsc.awaitTermination();
+
         } catch (InterruptedException e) {
             jsc.sparkContext().getConf().log().error(e.getMessage(), e);
         }
