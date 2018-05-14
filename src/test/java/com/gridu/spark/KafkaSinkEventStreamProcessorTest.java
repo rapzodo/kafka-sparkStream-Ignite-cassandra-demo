@@ -1,6 +1,7 @@
 package com.gridu.spark;
 
 import com.google.common.collect.ImmutableMap;
+import com.gridu.spark.helpers.SparkArtifactsHelper;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
 import com.gridu.spark.sql.SparkSQLEventDao;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -39,7 +40,8 @@ public class KafkaSinkEventStreamProcessorTest{
                 .put("offsets.autocommit.enable", false)
                 .build();
 
-        javaStreamingContext = new JavaStreamingContext("local[*]", "stopbotUnittests",
+        javaStreamingContext = new JavaStreamingContext(
+                SparkArtifactsHelper.createSparkContext("local[*]", "stopbotUnittests"),
                 Seconds.apply(3));
 
         session = SparkSession.builder().getOrCreate();

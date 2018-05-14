@@ -47,8 +47,7 @@ public class JsonConverterTest {
 
     @Test
     public void shouldParseMissingFieldJsonString() {
-        Event expectedEvent = anEvent();
-        expectedEvent.setUrl(null);
+        Event expectedEvent = new Event("click","140.94.141.193",0,null);
         assertThat(JsonEventMessageConverter.fromJson(aMissingFieldJsonString())).isEqualTo(expectedEvent);
     }
 

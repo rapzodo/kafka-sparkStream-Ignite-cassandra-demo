@@ -24,7 +24,6 @@ public class CassandraDaoTest {
         sparkContext = SparkArtifactsHelper
                 .createSparkContext("local[*]", "cassandraTest");
         dao = new CassandraDao(sparkContext.sc());
-//        dao.createTableAndKeyspace();
     }
 
     @Test
@@ -35,13 +34,13 @@ public class CassandraDaoTest {
                         new BotRegistry("123", "some.url", 1))
                 , Encoders.bean(BotRegistry.class));
         dao.persist(botRegistryDataset);
-        assertThat(dao.getAll().count()).isEqualTo(1);
+        assertThat(dao.getAllRecords()).hasSize(1);
     }
 
     @Test
     public void shouldRemoveRecordAfterTTLExpires() throws InterruptedException {
         Thread.sleep((CassandraDao.TTL_SECS + 2) * 1000);
-        assertThat(dao.getAll().isEmpty()).isTrue();
+        assertThat(dao.getAllRecords().isEmpty()).isTrue();
     }
 
 }

@@ -2,9 +2,8 @@ package com.gridu.persistence.ignite;
 
 import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.Event;
-import com.gridu.persistence.ignite.IgniteDao;
-import com.gridu.persistence.ignite.IgniteEventDao;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
+import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
@@ -17,7 +16,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,6 +29,7 @@ public class IgniteEventDaoTest {
     private static JavaSparkContext sc;
     private static JavaRDD<Event> eventJavaRDD;
     private static JavaIgniteContext ic;
+    private static Ignite ignite;
 
     @BeforeClass
     public static void setup() {
@@ -39,7 +42,7 @@ public class IgniteEventDaoTest {
     }
 
     private static void startIgnite() {
-        Ignition.start();
+        ignite = Ignition.getOrStart(new IgniteConfiguration());
         Ignition.setClientMode(true);
     }
 
@@ -78,7 +81,7 @@ public class IgniteEventDaoTest {
         JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(eventJavaRDD);
         Dataset<Row> aggregatedDS = igniteDao.aggregateAndCount(igniteDao.getDataSetFromIgniteJavaRdd(igniteRDD),
                 functions.col("ip"),functions.col("url")).cache();
-        aggregatedDS.show();
+        aggregatedDS.show(false);
         assertThat(aggregatedDS.first().get(2)).isEqualTo(19L);
     }
 
@@ -106,7 +109,7 @@ public class IgniteEventDaoTest {
     @AfterClass
     public static void cleanUp() {
         igniteDao.closeResource();
-        Ignition.stop(true);
+        ignite.close();
         sc.close();
     }
 }

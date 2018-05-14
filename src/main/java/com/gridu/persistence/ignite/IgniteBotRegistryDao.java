@@ -7,7 +7,9 @@ import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.sql.*;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.SaveMode;
 import scala.Tuple2;
 
 import java.util.ArrayList;
@@ -26,7 +28,6 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
     public IgniteBotRegistryDao(JavaIgniteContext javaIgniteContext) {
         cacheConfiguration = new CacheConfiguration<>(BOTREGISTRY_CACHE);
         cacheConfiguration.setIndexedTypes(Long.class, BotRegistry.class);
-//        cacheConfiguration.setSqlSchema("PUBLIC");
         ic = javaIgniteContext;
     }
 

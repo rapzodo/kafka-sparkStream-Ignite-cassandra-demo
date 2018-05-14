@@ -25,7 +25,6 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
         this.ic = ic;
         eventsCacheCfg = new CacheConfiguration<>(EVENTS_CACHE_NAME);
         eventsCacheCfg.setIndexedTypes(Long.class,Event.class);
-//        eventsCacheCfg.setSqlSchema("PUBLIC");
     }
 
     @Override

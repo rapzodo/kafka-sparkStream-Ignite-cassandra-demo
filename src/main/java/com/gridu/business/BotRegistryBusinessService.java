@@ -1,8 +1,7 @@
 package com.gridu.business;
 
-import com.gridu.persistence.ignite.IgniteBotRegistryDao;
-import com.gridu.persistence.ignite.IgniteDao;
 import com.gridu.model.BotRegistry;
+import com.gridu.persistence.BaseDao;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
@@ -14,10 +13,10 @@ public class BotRegistryBusinessService implements StopBotBusinessService<Datase
     public static final int URL_COL = 1;
     public static final int COUNT_COL = 2;
     private Logger logger = LoggerFactory.getLogger(getClass());
-    private IgniteDao dao;
+    private BaseDao dao;
     private static final long ACTIONS_THRESHOLD = 10;
 
-    public BotRegistryBusinessService(IgniteBotRegistryDao dao) {
+    public BotRegistryBusinessService(BaseDao dao) {
         this.dao = dao;
     }
 

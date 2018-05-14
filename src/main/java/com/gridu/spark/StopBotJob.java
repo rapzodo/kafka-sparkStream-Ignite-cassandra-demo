@@ -3,7 +3,9 @@ package com.gridu.spark;
 import com.google.common.collect.ImmutableMap;
 import com.gridu.business.BotRegistryBusinessService;
 import com.gridu.business.EventsBusinessService;
-import com.gridu.persistence.ignite.IgniteBotRegistryDao;
+import com.gridu.model.BotRegistry;
+import com.gridu.persistence.BaseDao;
+import com.gridu.persistence.cassandra.CassandraDao;
 import com.gridu.persistence.ignite.IgniteEventDao;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
 import org.apache.ignite.Ignite;
@@ -41,11 +43,15 @@ public class StopBotJob {
             final JavaIgniteContext<?, ?> igniteContext = new JavaIgniteContext<>(javaStreamingContext.sparkContext()
                     , IgniteConfiguration::new);
 
-            final IgniteBotRegistryDao botRegistryDao = new IgniteBotRegistryDao(igniteContext);
+//            final IgniteBotRegistryDao botRegistryDao = new IgniteBotRegistryDao(igniteContext);
+
+            final BaseDao<BotRegistry> botRegistryDao = new CassandraDao(javaStreamingContext.sparkContext().sc());
+
             BotRegistryBusinessService botRegistryBusinessService = new BotRegistryBusinessService(botRegistryDao);
 
             final IgniteEventDao eventDao = new IgniteEventDao(igniteContext);
             EventsBusinessService eventsBusinessService = new EventsBusinessService(eventDao);
+
             KafkaSinkEventStreamProcessor processor = new KafkaSinkEventStreamProcessor(topics, kafkaProps, javaStreamingContext,
                     eventsBusinessService, botRegistryBusinessService);
 

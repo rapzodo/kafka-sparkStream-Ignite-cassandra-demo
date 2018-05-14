@@ -1,6 +1,6 @@
 package com.gridu.persistence.ignite;
 
-import com.gridu.model.Event;
+import com.gridu.persistence.BaseDao;
 import org.apache.ignite.lang.IgniteUuid;
 import org.apache.ignite.spark.IgniteDataFrameSettings;
 import org.apache.ignite.spark.JavaIgniteRDD;
@@ -12,13 +12,11 @@ import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.ignite.IgniteSparkSession;
 
-import java.util.List;
-
 import static org.apache.spark.sql.functions.col;
 
-public interface IgniteDao<K,T> {
+public interface IgniteDao<K,T> extends BaseDao<T> {
 
-    default Dataset<Row> aggregateAndCount(Dataset<Event> eventDataset, Column... groupedCols){
+    default Dataset<Row> aggregateAndCount(Dataset<T> eventDataset, Column... groupedCols){
         if(groupedCols == null || groupedCols.length == 0){
             throw new IllegalArgumentException("at least on column should be provided");
         }
@@ -57,13 +55,9 @@ public interface IgniteDao<K,T> {
         return IgniteUuid.randomUuid().localId();
     }
 
-    void persist(Dataset<T> datasets);
-
     JavaIgniteRDD<K, T> createAnSaveIgniteRdd(JavaRDD<T> rdd);
 
     Dataset<T> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<K,T> rdd);
-
-    List<T> getAllRecords();
 
     Dataset<T> loadFromIgnite();
 
