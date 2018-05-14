@@ -1,7 +1,7 @@
 package com.gridu.business;
 
-import com.gridu.ignite.sql.IgniteBotRegistryDao;
-import com.gridu.ignite.sql.IgniteDao;
+import com.gridu.persistence.ignite.IgniteBotRegistryDao;
+import com.gridu.persistence.ignite.IgniteDao;
 import com.gridu.model.BotRegistry;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;

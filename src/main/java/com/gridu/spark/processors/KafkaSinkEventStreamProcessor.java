@@ -3,16 +3,9 @@ package com.gridu.spark.processors;
 import com.gridu.business.BotRegistryBusinessService;
 import com.gridu.business.EventsBusinessService;
 import com.gridu.converters.JsonEventMessageConverter;
-import com.gridu.ignite.sql.IgniteBotRegistryDao;
-import com.gridu.ignite.sql.IgniteEventDao;
-import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.spark.StopBotJob;
 import com.gridu.spark.utils.OffsetUtils;
-import org.apache.ignite.Ignite;
-import org.apache.ignite.Ignition;
-import org.apache.ignite.cache.query.SqlFieldsQuery;
-import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
@@ -85,6 +78,7 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
             }
 
         });
+
         stream.foreachRDD(consumerRecordJavaRDD -> OffsetUtils.commitOffSets(consumerRecordJavaRDD, stream));
 
         jsc.start();

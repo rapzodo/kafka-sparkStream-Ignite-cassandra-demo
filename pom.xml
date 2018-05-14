@@ -21,10 +21,10 @@
     </build>
 
     <properties>
-            <spark.version>2.2.0</spark.version>
-            <ignite.version>2.4.0</ignite.version>
+        <spark.version>2.2.0</spark.version>
+        <ignite.version>2.4.0</ignite.version>
     </properties>
-
+    <!--SPARK-->
     <dependencies>
         <dependency>
             <groupId>org.apache.spark</groupId>
@@ -69,6 +69,16 @@
             <artifactId>ignite-indexing</artifactId>
             <version>${ignite.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.datastax.spark</groupId>
+            <artifactId>spark-cassandra-connector_2.11</artifactId>
+            <version>2.0.7</version>
+        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.datastax.spark</groupId>-->
+            <!--<artifactId>spark-cassandra-connector-java_2.11</artifactId>-->
+            <!--<version>1.5.2</version>-->
+        <!--</dependency>-->
         <!--TESTING-->
         <dependency>
             <groupId>junit</groupId>

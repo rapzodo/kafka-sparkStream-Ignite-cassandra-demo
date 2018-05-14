@@ -1,15 +1,12 @@
-package com.gridu.ignite.sql;
+package com.gridu.persistence.ignite;
 
 import com.gridu.model.BotRegistry;
-import com.gridu.model.Event;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
-import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.*;
 import scala.Tuple2;
 

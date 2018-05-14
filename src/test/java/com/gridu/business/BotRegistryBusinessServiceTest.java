@@ -1,16 +1,14 @@
 package com.gridu.business;
 
-import com.gridu.ignite.sql.IgniteBotRegistryDao;
 import com.gridu.model.BotRegistry;
+import com.gridu.persistence.ignite.IgniteBotRegistryDao;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
-import com.sun.xml.bind.v2.TODO;
-import org.apache.avro.generic.GenericData;
 import org.apache.ignite.spark.JavaIgniteContext;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.*;
-import org.apache.spark.sql.catalyst.expressions.GenericRow;
-import org.apache.spark.sql.catalyst.expressions.GenericRowWithSchema;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
@@ -18,7 +16,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

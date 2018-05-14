@@ -1,6 +1,5 @@
-package com.gridu.ignite.sql;
+package com.gridu.persistence.ignite;
 
-import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import org.apache.ignite.lang.IgniteUuid;
 import org.apache.ignite.spark.IgniteDataFrameSettings;

@@ -1,7 +1,7 @@
 package com.gridu.business;
 
-import com.gridu.ignite.sql.IgniteDao;
-import com.gridu.ignite.sql.IgniteEventDao;
+import com.gridu.persistence.ignite.IgniteDao;
+import com.gridu.persistence.ignite.IgniteEventDao;
 import com.gridu.model.Event;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;

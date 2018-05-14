@@ -1,11 +1,11 @@
-package com.gridu.ignite.sql;
+package com.gridu.persistence.ignite;
 
 import com.gridu.converters.JsonEventMessageConverter;
-import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
+import com.gridu.persistence.ignite.IgniteDao;
+import com.gridu.persistence.ignite.IgniteEventDao;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import org.apache.ignite.Ignition;
-import org.apache.ignite.cache.CacheEntry;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;

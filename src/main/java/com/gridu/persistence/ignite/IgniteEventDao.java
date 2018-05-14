@@ -1,22 +1,18 @@
-package com.gridu.ignite.sql;
+package com.gridu.persistence.ignite;
 
 import com.gridu.model.Event;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
-import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.*;
 import scala.Tuple2;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import static org.apache.spark.sql.functions.col;
 
 public class IgniteEventDao implements IgniteDao<Long,Event> {
     public static final String CONFIG_FILE = "config/example-ignite.xml";
