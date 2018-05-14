@@ -1,6 +1,7 @@
 package com.gridu.persistence.ignite;
 
 import com.gridu.model.BotRegistry;
+import com.gridu.persistence.cassandra.CassandraDao;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -12,8 +13,11 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SaveMode;
 import scala.Tuple2;
 
+import javax.cache.expiry.Duration;
+import javax.cache.expiry.ModifiedExpiryPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.apache.ignite.spark.IgniteDataFrameSettings.*;
@@ -28,6 +32,7 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
     public IgniteBotRegistryDao(JavaIgniteContext javaIgniteContext) {
         cacheConfiguration = new CacheConfiguration<>(BOTREGISTRY_CACHE);
         cacheConfiguration.setIndexedTypes(Long.class, BotRegistry.class);
+        setExpirePolicy();
         ic = javaIgniteContext;
     }
 
@@ -67,6 +72,11 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
                 .option(OPTION_TABLE(),IgniteBotRegistryDao.BOTREGISTRY_TABLE)
                 .option(OPTION_CONFIG_FILE(),IgniteEventDao.CONFIG_FILE)
                 .load().as(Encoders.bean(BotRegistry.class));
+    }
+
+    public void setExpirePolicy(){
+        cacheConfiguration.setExpiryPolicyFactory(ModifiedExpiryPolicy
+                .factoryOf(new Duration(TimeUnit.SECONDS,CassandraDao.TTL_SECS)));
     }
 
     @Override
