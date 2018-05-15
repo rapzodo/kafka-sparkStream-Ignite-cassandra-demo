@@ -1,6 +1,7 @@
 package com.gridu.persistence.ignite;
 
 import com.gridu.model.BotRegistry;
+import com.gridu.persistence.BaseDao;
 import com.gridu.persistence.cassandra.CassandraDao;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
@@ -76,7 +77,7 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
 
     public void setExpirePolicy(){
         cacheConfiguration.setExpiryPolicyFactory(ModifiedExpiryPolicy
-                .factoryOf(new Duration(TimeUnit.SECONDS,CassandraDao.TTL_SECS)));
+                .factoryOf(new Duration(TimeUnit.SECONDS,TTL)));
     }
 
     @Override

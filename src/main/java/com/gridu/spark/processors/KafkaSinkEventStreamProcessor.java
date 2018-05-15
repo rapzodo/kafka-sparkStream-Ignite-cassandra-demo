@@ -25,7 +25,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-public class KafkaSinkEventStreamProcessor implements EventsProcessor {
+public class KafkaSinkEventStreamProcessor {
 
     private Logger logger = LoggerFactory.getLogger(getClass());
 

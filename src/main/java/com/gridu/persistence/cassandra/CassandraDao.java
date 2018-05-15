@@ -19,7 +19,6 @@ public class CassandraDao implements BaseDao<BotRegistry> {
     private SparkContext sc;
     public static final String CASSANDRA_HOST_PROPERTY = "localhost";
     public static final String CASSANDRA_BOT_REGISTRY_TABLE = "botregistry";
-    public static final long TTL_SECS = 5;
 
     public CassandraDao(SparkContext sc) {
         this.sc = sc;
@@ -40,7 +39,7 @@ public class CassandraDao implements BaseDao<BotRegistry> {
     public void persist(Dataset<BotRegistry> botRegistryDataset) {
         javaFunctions(botRegistryDataset.toJavaRDD())
                 .writerBuilder(KEY_SPACE,CASSANDRA_BOT_REGISTRY_TABLE,mapToRow(BotRegistry.class))
-                .withConstantTTL(Duration.standardSeconds(TTL_SECS)).saveToCassandra();
+                .withConstantTTL(Duration.standardSeconds(TTL)).saveToCassandra();
     }
 
 

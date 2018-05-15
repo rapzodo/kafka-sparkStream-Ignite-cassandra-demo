@@ -23,14 +23,6 @@ public class OffsetUtils     {
         return ((HasOffsetRanges) rdd.rdd()).offsetRanges();
     }
 
-    public static List<OffsetRange> getOffsetRanges(JavaRDD<ConsumerRecord<String,String>> rdd, OffsetRange[] offsetRanges){
-        List<OffsetRange> result = new ArrayList<>();
-        rdd.foreachPartition(consumerRecords -> {
-            result.add(offsetRanges[TaskContext.get().partitionId()]);
-        });
-        return result;
-    }
-
     public static OffsetRange[] createOffsetRanges(String topic, int partition, long from, long until, int offsetRangesLength){
         OffsetRange[] objects =IntStream.rangeClosed(1, offsetRangesLength)
                 .mapToObj(value -> OffsetRange.create(topic, partition, from, until))
