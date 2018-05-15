@@ -43,7 +43,7 @@ public class IgniteEventDaoTest {
 
     private static void startIgnite() {
         ignite = Ignition.getOrStart(new IgniteConfiguration());
-        Ignition.setClientMode(true);
+//        Ignition.setClientMode(true);
     }
 
     private static JavaRDD<Event> loadEventMessagesRdd() {
@@ -108,7 +108,7 @@ public class IgniteEventDaoTest {
 
     @AfterClass
     public static void cleanUp() {
-        igniteDao.closeResource();
+        igniteDao.cleanUp();
         ignite.close();
         sc.close();
     }

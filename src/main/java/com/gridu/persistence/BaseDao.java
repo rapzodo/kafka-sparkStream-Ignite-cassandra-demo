@@ -7,8 +7,12 @@ import java.util.List;
 public interface BaseDao<T> {
     static final long TTL = 3;
 
+    void setup();
+
     void persist(Dataset<T> t);
 
     List<T> getAllRecords();
+
+    void cleanUp();
 
 }

@@ -12,6 +12,7 @@ public class SparkArtifactsHelper {
 
     public static JavaSparkContext createSparkContext(String master, String appName) {
         SparkConf sparkConf = new SparkConf().setAppName(appName).setMaster(master);
+        sparkConf.set("spark.driver.allowMultipleContexts", "true");
         return JavaSparkContext.fromSparkContext(SparkContext.getOrCreate(sparkConf));
     }
 

@@ -29,12 +29,19 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
     public static final String BOTREGISTRY_CACHE = "botRegistryCache";
     private JavaIgniteContext<Long,BotRegistry> ic;
     private CacheConfiguration<Long,BotRegistry> cacheConfiguration;
+    private IgniteCache<Long,BotRegistry> botsCache;
 
     public IgniteBotRegistryDao(JavaIgniteContext javaIgniteContext) {
+        ic = javaIgniteContext;
+        setup();
+    }
+
+    @Override
+    public void setup() {
         cacheConfiguration = new CacheConfiguration<>(BOTREGISTRY_CACHE);
         cacheConfiguration.setIndexedTypes(Long.class, BotRegistry.class);
         setExpirePolicy();
-        ic = javaIgniteContext;
+        botsCache = ic.ignite().getOrCreateCache(cacheConfiguration);
     }
 
     @Override
@@ -56,15 +63,18 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
 
     @Override
     public List<BotRegistry> getAllRecords(){
-        IgniteCache<Long, BotRegistry> blacklistCache = ic.ignite().getOrCreateCache(cacheConfiguration);
-
-        List<List<?>> all = blacklistCache
+        List<List<?>> all = botsCache
                 .query(new SqlFieldsQuery("select * from " + BOTREGISTRY_TABLE))
                 .getAll();
         return all.stream().map(objects -> new BotRegistry(objects.get(0).toString(),
                 objects.get(1).toString(),
                 Long.valueOf(objects.get(2).toString())))
         .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    public void cleanUp() {
+        ic.close(true);
     }
 
     @Override
@@ -80,8 +90,4 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
                 .factoryOf(new Duration(TimeUnit.SECONDS,TTL)));
     }
 
-    @Override
-    public void closeResource() {
-        ic.close(true);
-    }
 }

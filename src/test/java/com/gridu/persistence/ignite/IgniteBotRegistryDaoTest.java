@@ -39,7 +39,7 @@ public class IgniteBotRegistryDaoTest {
 
     private static void startIgnite() {
         ignite = Ignition.getOrStart(new IgniteConfiguration());
-        Ignition.setClientMode(true);
+//        Ignition.setClientMode(true);
     }
 
     private JavaRDD<BotRegistry> getBotRegistryRdd() {
@@ -97,7 +97,7 @@ public class IgniteBotRegistryDaoTest {
 
     @AfterClass
     public static void cleanUp() {
-        igniteDao.closeResource();
+        igniteDao.cleanUp();
         ignite.close();
         sc.close();
     }

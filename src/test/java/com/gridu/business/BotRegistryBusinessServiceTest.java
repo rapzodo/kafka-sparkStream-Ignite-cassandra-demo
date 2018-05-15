@@ -60,12 +60,6 @@ public class BotRegistryBusinessServiceTest {
         assertThat(service.identifyBots(aRowDataSet(1)).count()).isZero();
     }
 
-    @Test
-    @Ignore
-    public void shouldRemoveExpiredBotsFromBlackList(){
-        assertThat(service.removeExpiredBotsFromBlackList().count()).isNotZero();
-    }
-
     private Dataset<Row> aRowDataSet(long count) {
         StructType structType = DataTypes.createStructType(new StructField[]{DataTypes.createStructField("ip",
                 DataTypes.StringType,false),

@@ -61,5 +61,4 @@ public interface IgniteDao<K,T> extends BaseDao<T> {
 
     Dataset<T> loadFromIgnite();
 
-    void closeResource();
 }

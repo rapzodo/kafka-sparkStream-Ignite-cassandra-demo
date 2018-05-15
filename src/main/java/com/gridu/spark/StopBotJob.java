@@ -66,7 +66,7 @@ public class StopBotJob {
                 .put("value.deserializer", StringDeserializer.class)
                 .put("group.id", "bot-buster-consumers")
                 .put("offsets.autocommit.enable", false)
-                .put("consumer.auto.offset.reset", "earliest")
+                .put("consumer.auto.offset.reset", "latest")
                 .put("consumer.session.timeout.ms", SESSION_TIMEOUT_MS)
                 .put("consumer.max.poll.records", BATCH_SIZE)
                 .put("consumer.group.max.session.timeout.ms", SESSION_TIMEOUT_MS)

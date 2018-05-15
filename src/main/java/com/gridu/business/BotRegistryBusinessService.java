@@ -26,6 +26,8 @@ public class BotRegistryBusinessService implements StopBotBusinessService<Datase
         logger.info("!!!{} BOTS IDENTIFIED!!!",bots.count());
         bots.show();
         dao.persist(bots);
+
+        logger.info(">>> BOTS REGISTERED IN CASSANDRA BLACKLIST : {} <<<",dao.getAllRecords().size());
         return null;
     }
 
@@ -33,10 +35,6 @@ public class BotRegistryBusinessService implements StopBotBusinessService<Datase
         return aggregatedDs
                 .filter(row -> row.getLong(COUNT_COL) > ACTIONS_THRESHOLD)
                 .as(Encoders.bean(BotRegistry.class));
-    }
-
-    public Dataset<BotRegistry> removeExpiredBotsFromBlackList(){
-        return null;
     }
 
 }

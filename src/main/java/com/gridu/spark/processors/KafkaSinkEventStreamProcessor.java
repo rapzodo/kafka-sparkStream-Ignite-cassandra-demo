@@ -72,9 +72,8 @@ public class KafkaSinkEventStreamProcessor {
 
                 if (bostsCount > 0) {
                     botRegistryBusinessService.execute(bots);
-                    logger.info("!!! {} BOTS IN BLACKLIST !!!",bostsCount);
+//                    logger.info("!!! {} BOTS IN BLACKLIST !!!",bostsCount);
                 }
-
             }
 
         });
@@ -87,7 +86,7 @@ public class KafkaSinkEventStreamProcessor {
             jsc.awaitTermination();
 
         } catch (InterruptedException e) {
-            jsc.sparkContext().getConf().log().error(e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         }
     }
 }
