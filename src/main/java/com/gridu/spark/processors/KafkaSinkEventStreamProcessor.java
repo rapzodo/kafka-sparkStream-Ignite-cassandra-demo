@@ -1,14 +1,22 @@
 package com.gridu.spark.processors;
 
+import com.gridu.business.BotRegistryBusinessService;
+import com.gridu.business.EventsBusinessService;
 import com.gridu.converters.JsonEventMessageConverter;
+import com.gridu.ignite.sql.IgniteBotRegistryDao;
+import com.gridu.ignite.sql.IgniteEventDao;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.spark.StopBotJob;
-import com.gridu.spark.sql.EventDao;
 import com.gridu.spark.utils.OffsetUtils;
+import org.apache.ignite.Ignite;
+import org.apache.ignite.Ignition;
+import org.apache.ignite.cache.query.SqlFieldsQuery;
+import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.streaming.Milliseconds;
 import org.apache.spark.streaming.api.java.JavaDStream;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
@@ -16,6 +24,8 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 import org.apache.spark.streaming.kafka010.ConsumerStrategies;
 import org.apache.spark.streaming.kafka010.KafkaUtils;
 import org.apache.spark.streaming.kafka010.LocationStrategies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,22 +34,28 @@ import java.util.Map;
 
 public class KafkaSinkEventStreamProcessor implements EventsProcessor {
 
+    private Logger logger = LoggerFactory.getLogger(getClass());
+
     private List<String> topics;
     private Map<String, Object> props;
-    public static final long ACTIONS_THRESHOLD = 10;//1000
     private JavaStreamingContext jsc;
-    private EventDao eventDao;
+    private BotRegistryBusinessService botRegistryBusinessService;
+    private EventsBusinessService eventsBusinessService;
 
     public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props,
-                                         JavaStreamingContext jsc, EventDao eventDao) {
+                                         JavaStreamingContext jsc,
+                                         EventsBusinessService eventsBusinessService,
+                                         BotRegistryBusinessService botRegistryBusinessService) {
         this.topics = topics;
         this.props = props;
         this.jsc = jsc;
-        this.eventDao = eventDao;
-        jsc.sparkContext().setLogLevel("ERROR");
+        this.botRegistryBusinessService = botRegistryBusinessService;
+        this.eventsBusinessService = eventsBusinessService;
     }
 
     public void process() {
+        jsc.sparkContext().setLogLevel("INFO");
+
         JavaInputDStream<ConsumerRecord<String, String>> stream = KafkaUtils.createDirectStream(jsc,
                 LocationStrategies.PreferConsistent(),
                 ConsumerStrategies.Subscribe(topics, props));
@@ -51,22 +67,31 @@ public class KafkaSinkEventStreamProcessor implements EventsProcessor {
         eventMessages.foreachRDD((rdd, time) -> {
             rdd.cache();
             if (rdd.count() > 0) {
-                System.out.println("--------Window: " + SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds())) + "-------");
-                JavaRDD<Event> eventsRDD = rdd.map(message -> JsonEventMessageConverter.fromJson(message));
-                Dataset<BotRegistry> bots = eventDao.findBots(eventsRDD, ACTIONS_THRESHOLD);
 
-                //TODO persist bots to blacklist
+                final String formattedString = SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds()));
+                logger.info("--------Window: {} -----------", formattedString);
+
+                JavaRDD<Event> eventsRDD = rdd.map(JsonEventMessageConverter::fromJson);
+
+                final Dataset<Row> bots = eventsBusinessService.execute(eventsRDD).cache();
+
+                final long bostsCount = bots.count();
+
+                if (bostsCount > 0) {
+                    botRegistryBusinessService.execute(bots);
+                    logger.info("!!! {} BOTS IN BLACKLIST !!!",bostsCount);
+                }
 
             }
 
         });
-
         stream.foreachRDD(consumerRecordJavaRDD -> OffsetUtils.commitOffSets(consumerRecordJavaRDD, stream));
 
         jsc.start();
 
         try {
             jsc.awaitTermination();
+
         } catch (InterruptedException e) {
             jsc.sparkContext().getConf().log().error(e.getMessage(), e);
         }

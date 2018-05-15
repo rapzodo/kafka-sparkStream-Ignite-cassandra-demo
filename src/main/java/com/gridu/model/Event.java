@@ -1,5 +1,6 @@
 package com.gridu.model;
 
+import org.apache.ignite.cache.query.annotations.QuerySqlField;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
@@ -10,12 +11,16 @@ import java.util.Objects;
 public class Event implements Serializable{
 
     @JsonProperty
+    @QuerySqlField
     private String type;
     @JsonProperty
+    @QuerySqlField(index = true)
     private String ip;
     @JsonProperty("unix_time")
-    private long unixTime;
+    @QuerySqlField
+    private long datetime;
     @JsonProperty
+    @QuerySqlField(index = true)
     private String url;
 
     public Event(){}
@@ -23,7 +28,7 @@ public class Event implements Serializable{
     public Event(String type, String ip, long unixTime, String url) {
         this.type = type;
         this.ip = ip;
-        this.unixTime = unixTime;
+        this.datetime = unixTime;
         this.url = url;
     }
 
@@ -43,12 +48,12 @@ public class Event implements Serializable{
         this.ip = ip;
     }
 
-    public long getUnixTime() {
-        return unixTime;
+    public long getDatetime() {
+        return datetime;
     }
 
-    public void setUnixTime(long unixTime) {
-        this.unixTime = unixTime;
+    public void setDatetime(long datetime) {
+        this.datetime = datetime;
     }
 
     public String getUrl() {
@@ -65,7 +70,7 @@ public class Event implements Serializable{
         if (this == o) return true;
         if (!(o instanceof Event)) return false;
         Event event = (Event) o;
-        return getUnixTime() == event.getUnixTime() &&
+        return getDatetime() == event.getDatetime() &&
                 getType().equals(event.getType()) &&
                 Objects.equals(getIp(), event.getIp()) &&
                 Objects.equals(getUrl(), event.getUrl());
@@ -74,7 +79,7 @@ public class Event implements Serializable{
     @Override
     public int hashCode() {
 
-        return Objects.hash(getType(), getIp(), getUnixTime(), getUrl());
+        return Objects.hash(getType(), getIp(), getDatetime(), getUrl());
     }
 
     @Override
@@ -82,7 +87,7 @@ public class Event implements Serializable{
         return "Event{" +
                 "type='" + type + '\'' +
                 ", ip='" + ip + '\'' +
-                ", unixTime=" + unixTime +
+                ", datetime=" + datetime +
                 ", url='" + url + '\'' +
                 '}';
     }

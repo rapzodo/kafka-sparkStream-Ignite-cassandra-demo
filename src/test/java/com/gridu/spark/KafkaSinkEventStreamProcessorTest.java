@@ -1,6 +1,8 @@
+package com.gridu.spark;
+
 import com.google.common.collect.ImmutableMap;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
-import com.gridu.spark.sql.EventDao;
+import com.gridu.spark.sql.SparkSQLEventDao;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -23,7 +25,7 @@ public class KafkaSinkEventStreamProcessorTest{
     private Map<String,Object> kafkaprops;
     private Dataset<Row> rows;
     private JavaStreamingContext javaStreamingContext;
-    private EventDao dao;
+    private SparkSQLEventDao dao;
     private SparkSession session;
 
     @Before
@@ -44,9 +46,9 @@ public class KafkaSinkEventStreamProcessorTest{
 
 //        rows = session.read().option("header",true).text("./input/dataset").cache();
 
-        dao = new EventDao(javaStreamingContext.sparkContext().sc());
+        dao = new SparkSQLEventDao(javaStreamingContext.sparkContext().sc());
 
-        processor = new KafkaSinkEventStreamProcessor(topics,kafkaprops, javaStreamingContext,dao);
+//        processor = new KafkaSinkEventStreamProcessor(topics,kafkaprops, javaStreamingContext,dao);
     }
 
 

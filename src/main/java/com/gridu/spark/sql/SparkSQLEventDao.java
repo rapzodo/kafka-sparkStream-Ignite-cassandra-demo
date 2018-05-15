@@ -10,9 +10,8 @@ import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SparkSession;
 
 import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.soundex;
 
-public class EventDao {
+public class SparkSQLEventDao implements SparkSqlDao<Event>{
 
     private SparkSession session;
 
@@ -20,25 +19,28 @@ public class EventDao {
         session.sparkContext().setLogLevel(level);
     }
 
-    public EventDao(SparkSession session) {
+    public SparkSQLEventDao(SparkSession session) {
         this.session = session;
     }
 
-    public EventDao(SparkContext sparkContext) {
+    public SparkSQLEventDao(SparkContext sparkContext) {
         session = SparkSession.builder().sparkContext(sparkContext).getOrCreate();
     }
 
-    public EventDao(String master, String appName) {
+    public SparkSQLEventDao(String master, String appName) {
         session = SparkSession.builder().master(master).appName(appName).getOrCreate();
     }
 
-    public EventDao(SparkConf sparkConf) {
+    public SparkSQLEventDao(SparkConf sparkConf) {
         session = SparkSession.builder().config(sparkConf).getOrCreate();
     }
 
+    public Dataset<Event> getEventsDataSetFromJavaRdd(JavaRDD<Event> rdd) {
+        return session.createDataset(rdd.filter(event -> event != null).rdd(), Encoders.bean(Event.class)).cache();
+    }
+
     public Dataset<BotRegistry> findBots(JavaRDD<Event> rdd, long threshold) {
-        Dataset<Event> eventDS = session.createDataset(rdd.filter(event -> event != null).rdd(), Encoders.bean(Event.class)).cache();
-        Dataset<BotRegistry> result = eventDS.select(col("ip"), col("type"), col("url"))
+        Dataset<BotRegistry> result = getEventsDataSetFromJavaRdd(rdd).select(col("ip"), col("type"), col("url"))
                 .groupBy(col("ip"), col("type"), col("url"))
                 .count()
                 .filter(col("count").gt(threshold))
@@ -47,6 +49,10 @@ public class EventDao {
         session.log().info(result.count()+" WERE FOUND");
         result.show();
         return result;
+    }
+
+    public void closeResource() {
+        session.close();
     }
 
 }
