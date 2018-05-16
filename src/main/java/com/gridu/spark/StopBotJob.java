@@ -32,10 +32,9 @@ public class StopBotJob {
     public static final long HEARTBEAT_MS = 20000;
 
     public static void main(String[] args) {
-
         setLogLevels();
+        Ignition.setClientMode(true);
         try(Ignite ignite = Ignition.start()) {
-            Ignition.setClientMode(true);
             List<String> topics = Arrays.asList("partners-events-topic");
             Map<String, Object> kafkaProps = getConfiguration();
 

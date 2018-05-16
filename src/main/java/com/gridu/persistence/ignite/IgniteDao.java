@@ -9,12 +9,15 @@ import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.catalog.Catalog;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.ignite.IgniteSparkSession;
 
 import static org.apache.spark.sql.functions.col;
 
 public interface IgniteDao<K,T> extends BaseDao<T> {
+
+    public static final String CONFIG_FILE = "config/example-ignite.xml";
 
     default Dataset<Row> aggregateAndCount(Dataset<T> eventDataset, Column... groupedCols){
         if(groupedCols == null || groupedCols.length == 0){
@@ -26,20 +29,6 @@ public interface IgniteDao<K,T> extends BaseDao<T> {
                 .orderBy(col("count").desc());
     }
 
-    static Dataset<Table> getDataTables(){
-        IgniteSparkSession igniteSession = IgniteSparkSession.builder()
-                .appName("Spark Ignite catalog example")
-                .master("local")
-                .config("spark.executor.instances", "2")
-                //Only additional option to refer to Ignite cluster.
-                .igniteConfig(IgniteEventDao.CONFIG_FILE)
-                .getOrCreate();
-
-
-// This will print out info about all SQL tables existed in Ignite.
-        return igniteSession.catalog().listTables();
-    }
-
     static void save(Dataset dataset,String table, String configFile,String pKeys,String tableParams,SaveMode saveMode){
         dataset.write()
                 .format(IgniteDataFrameSettings.FORMAT_IGNITE())
@@ -47,6 +36,8 @@ public interface IgniteDao<K,T> extends BaseDao<T> {
                 .option(IgniteDataFrameSettings.OPTION_CONFIG_FILE(), configFile)
                 .option(IgniteDataFrameSettings.OPTION_CREATE_TABLE_PRIMARY_KEY_FIELDS(),pKeys)
                 .option(IgniteDataFrameSettings.OPTION_CREATE_TABLE_PARAMETERS(),tableParams)
+//                .option(IgniteDataFrameSettings.OPTION_STREAMER_FLUSH_FREQUENCY(),3000)
+//                .option(IgniteDataFrameSettings.OPTION_STREAMER_ALLOW_OVERWRITE(),true)
                 .mode(saveMode)
                 .save();
     }

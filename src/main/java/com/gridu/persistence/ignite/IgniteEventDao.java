@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class IgniteEventDao implements IgniteDao<Long,Event> {
-    public static final String CONFIG_FILE = "config/example-shared-rdd.xml";
     public static final String EVENT_TABLE = "EVENT";
     public static final String EVENTS_CACHE_NAME = "events";
     private JavaIgniteContext<Long,Event> ic;
@@ -33,13 +32,12 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
     public void setup(){
         eventsCacheCfg = new CacheConfiguration<>(EVENTS_CACHE_NAME);
         eventsCacheCfg.setIndexedTypes(Long.class,Event.class);
-        eventsCacheCfg.setCacheMode(CacheMode.REPLICATED);
-        eventsCache = ic.ignite().createCache(eventsCacheCfg);
+        eventsCache = ic.ignite().getOrCreateCache(eventsCacheCfg);
     }
 
     @Override
     public void persist(Dataset<Event> datasets){
-        IgniteDao.save(datasets, EVENT_TABLE, CONFIG_FILE,"ip,datetime,url","template=replicated",SaveMode.Append);
+        IgniteDao.save(datasets, EVENT_TABLE, CONFIG_FILE,"ip,datetime,url","template=replicated",SaveMode.Ignore);
     }
 
     @Override

@@ -2,6 +2,7 @@ package com.gridu.persistence.ignite;
 
 import com.gridu.model.BotRegistry;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
+import com.gridu.spark.utils.IgniteUtils;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -38,7 +39,7 @@ public class IgniteBotRegistryDaoTest {
     }
 
     private static void startIgnite() {
-        ignite = Ignition.start();
+        ignite = Ignition.getOrStart(new IgniteConfiguration());
     }
 
     private JavaRDD<BotRegistry> getBotRegistryRdd() {
@@ -50,8 +51,7 @@ public class IgniteBotRegistryDaoTest {
         Dataset<BotRegistry> bots = createBotRegistryDataSet();
         igniteDao.persist(bots);
 
-        assertThat(IgniteDao.getDataTables().first().name())
-                .isEqualTo(IgniteBotRegistryDao.BOTREGISTRY_TABLE);
+        assertThat(IgniteUtils.doesTableExists(IgniteBotRegistryDao.BOTREGISTRY_TABLE)).isTrue();
 
     }
 

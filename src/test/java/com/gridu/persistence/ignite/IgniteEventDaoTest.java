@@ -3,6 +3,7 @@ package com.gridu.persistence.ignite;
 import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.Event;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
+import com.gridu.spark.utils.IgniteUtils;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -42,7 +43,7 @@ public class IgniteEventDaoTest {
     }
 
     private static void startIgnite() {
-        ignite = Ignition.start();
+        ignite = Ignition.getOrStart(new IgniteConfiguration());
     }
 
     private static JavaRDD<Event> loadEventMessagesRdd() {
@@ -51,14 +52,13 @@ public class IgniteEventDaoTest {
     }
 
     @Test
-    public void shouldCreateTableAndPersistBotInBlackList() {
-        Dataset<Event> bots = SparkSession.builder().sparkContext(sc.sc()).getOrCreate()
+    public void shouldCreateTableAndPersistEventsToIgnite() {
+        Dataset<Event> events = SparkSession.builder().sparkContext(sc.sc()).getOrCreate()
                 .createDataset(eventJavaRDD.take(5), Encoders.bean(Event.class));
-        igniteDao.persist(bots);
+        igniteDao.persist(events);
 
-        assertThat(IgniteDao.getDataTables().first().name())
-                .isEqualTo(IgniteEventDao.EVENT_TABLE);
-
+        IgniteUtils.getTables().show();
+        assertThat(IgniteUtils.doesTableExists(IgniteEventDao.EVENT_TABLE)).isTrue();
     }
 
     @Test
@@ -69,11 +69,13 @@ public class IgniteEventDaoTest {
 
     @Test
     public void shouldSqlEventsDsFromJavaRdd() {
+        clearEventsCache();
         JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(sc.parallelize(createEventsList()));
         Dataset<Event> dataSetFromJavaRdd = igniteDao.getDataSetFromIgniteJavaRdd(igniteRDD);
         assertThat(igniteRDD.count()).isEqualTo(1);
         assertThat(dataSetFromJavaRdd.count()).isEqualTo(igniteRDD.count());
     }
+
 
     @Test
     public void shouldAggregateAndCountIpUrlActionsAndOrderByDesc() {
@@ -90,9 +92,9 @@ public class IgniteEventDaoTest {
                 .createDataset(Collections.singletonList(new Event()), Encoders.bean(Event.class));
         igniteDao.aggregateAndCount(eventDataset);
     }
-
     @Test
     public void shouldSelectAllEventsFromEventTable(){
+        clearEventsCache();
         List<Event> eventsList = createEventsList();
         igniteDao.createAnSaveIgniteRdd(sc.parallelize(eventsList));
         List<Event> events = igniteDao.getAllRecords();
@@ -103,6 +105,10 @@ public class IgniteEventDaoTest {
     @NotNull
     private List<Event> createEventsList() {
         return Arrays.asList(new Event("click", "123.345", new Date().getTime(), "http://stopbot.com"));
+    }
+
+    private void clearEventsCache() {
+        ignite.cache(IgniteEventDao.EVENTS_CACHE_NAME).clear();
     }
 
     @AfterClass
