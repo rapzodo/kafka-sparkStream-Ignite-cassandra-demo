@@ -42,8 +42,7 @@ public class IgniteEventDaoTest {
     }
 
     private static void startIgnite() {
-        ignite = Ignition.getOrStart(new IgniteConfiguration());
-//        Ignition.setClientMode(true);
+        ignite = Ignition.start();
     }
 
     private static JavaRDD<Event> loadEventMessagesRdd() {

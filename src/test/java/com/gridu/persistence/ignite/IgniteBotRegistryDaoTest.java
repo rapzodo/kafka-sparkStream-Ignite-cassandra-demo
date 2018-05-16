@@ -38,8 +38,7 @@ public class IgniteBotRegistryDaoTest {
     }
 
     private static void startIgnite() {
-        ignite = Ignition.getOrStart(new IgniteConfiguration());
-//        Ignition.setClientMode(true);
+        ignite = Ignition.start();
     }
 
     private JavaRDD<BotRegistry> getBotRegistryRdd() {

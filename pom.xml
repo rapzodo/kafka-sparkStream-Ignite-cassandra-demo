@@ -17,6 +17,19 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -74,11 +87,6 @@
             <artifactId>spark-cassandra-connector_2.11</artifactId>
             <version>2.0.7</version>
         </dependency>
-        <!--<dependency>-->
-            <!--<groupId>com.datastax.spark</groupId>-->
-            <!--<artifactId>spark-cassandra-connector-java_2.11</artifactId>-->
-            <!--<version>1.5.2</version>-->
-        <!--</dependency>-->
         <!--TESTING-->
         <dependency>
             <groupId>junit</groupId>

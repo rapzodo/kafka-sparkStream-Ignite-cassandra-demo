@@ -3,6 +3,8 @@ package com.gridu.business;
 import com.gridu.model.BotRegistry;
 import com.gridu.persistence.ignite.IgniteBotRegistryDao;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.spark.IgniteContext;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
@@ -27,12 +29,12 @@ public class BotRegistryBusinessServiceTest {
     private BotRegistryBusinessService service;
     private IgniteBotRegistryDao dao;
     private JavaSparkContext sparkContext;
-    @Mock
     private JavaIgniteContext igniteContext;
 
     @Before
     public void setup(){
         sparkContext = SparkArtifactsHelper.createSparkContext("local[*]", "botServiceTest");
+        igniteContext = new JavaIgniteContext(sparkContext, IgniteConfiguration::new);
         dao = new IgniteBotRegistryDao(igniteContext);
         service = new BotRegistryBusinessService(dao);
     }

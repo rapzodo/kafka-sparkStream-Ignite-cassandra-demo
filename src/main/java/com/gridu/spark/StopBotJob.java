@@ -17,6 +17,7 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.streaming.Milliseconds;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +32,8 @@ public class StopBotJob {
     public static final long HEARTBEAT_MS = 20000;
 
     public static void main(String[] args) {
-        Logger.getLogger("org.apache.ignite").setLevel(Level.INFO);
+
+        setLogLevels();
         try(Ignite ignite = Ignition.start()) {
             Ignition.setClientMode(true);
             List<String> topics = Arrays.asList("partners-events-topic");
@@ -57,6 +59,11 @@ public class StopBotJob {
 
             processor.process();
         }
+    }
+
+    private static void setLogLevels(){
+        Logger.getLogger("com.gridu").setLevel(Level.INFO);
+        Logger.getLogger("org.apache.ignite").setLevel(Level.ERROR);
     }
 
     private static ImmutableMap<String, Object> getConfiguration() {
