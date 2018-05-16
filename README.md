@@ -1,4 +1,4 @@
-# streamprocessingfinalproject
+# Streamprocessingfinalproject
 final project for stream processing engineer learning path
 
 A spybot blocker
@@ -6,7 +6,7 @@ the system analyses event logs from partners, identifying and blacklisting suspi
 
 Data should be ingested in kafka, consumed and processed by sparkstreaming and persist blacklisted ips
 
-<h3>Flow description</h3>
+<h3>Description</h3>
 
 - Kafka FileConnector consumes partners events files from specif directory and populates kafka topic 
 - Messages are consumed by Kafka-Spark-streaming API
