@@ -71,6 +71,7 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
 
     @Override
     public List<BotRegistry> getAllRecords(){
+        botsCache = ic.ignite().getOrCreateCache(BOTREGISTRY_CACHE);
         List<List<?>> all = botsCache
                 .query(new SqlFieldsQuery("select * from " + BOTREGISTRY_TABLE))
                 .getAll();

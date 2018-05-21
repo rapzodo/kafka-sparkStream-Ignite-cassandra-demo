@@ -54,6 +54,7 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
 
     @Override
     public List<Event> getAllRecords() {
+        eventsCache = ic.ignite().getOrCreateCache(EVENTS_CACHE_NAME);
         List<List<?>> all = eventsCache
                 .query(new SqlFieldsQuery("select * from " + EVENT_TABLE))
                 .getAll();
@@ -76,7 +77,6 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
 
     @Override
     public void cleanUp() {
-        eventsCache.destroy();
         ic.close(true);
     }
 

@@ -40,6 +40,11 @@ public class IgniteEventDaoTest {
         igniteDao = new IgniteEventDao(ic);
         sc.setLogLevel("ERROR");
         eventJavaRDD = loadEventMessagesRdd();
+        destroyCache();
+    }
+
+    private static void destroyCache() {
+        ignite.cache(IgniteEventDao.EVENTS_CACHE_NAME).destroy();
     }
 
     private static void startIgnite() {

@@ -36,6 +36,7 @@ public class IgniteBotRegistryDaoTest {
         sc = SparkArtifactsHelper.createSparkContext("local[*]", "botregistrydaotest");
         igniteDao = new IgniteBotRegistryDao(new JavaIgniteContext(sc, IgniteConfiguration::new));
         sc.setLogLevel("ERROR");
+        ignite.cache(IgniteBotRegistryDao.BOTREGISTRY_CACHE).destroy();
     }
 
     private static void startIgnite() {
@@ -71,6 +72,7 @@ public class IgniteBotRegistryDaoTest {
 
     @Test
     public void shouldSelectAllBotsFromBlacklist() {
+        ignite.getOrCreateCache(IgniteBotRegistryDao.BOTREGISTRY_CACHE);
         Dataset<BotRegistry> botRegistryDataSet = createBotRegistryDataSet();
         igniteDao.persist(botRegistryDataSet);
         List<BotRegistry> allBots = igniteDao.getAllRecords();

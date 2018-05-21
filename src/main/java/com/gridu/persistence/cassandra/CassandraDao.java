@@ -17,7 +17,7 @@ import static com.datastax.spark.connector.japi.CassandraJavaUtil.*;
 public class CassandraDao implements BaseDao<BotRegistry> {
     private Logger logger = LoggerFactory.getLogger(getClass());
 
-    public static final String KEY_SPACE = "botsks";
+    public static final String KEY_SPACE = "stopbot";
     private SparkContext sc;
     public static final String CASSANDRA_HOST_PROPERTY = "localhost";
     public static final String CASSANDRA_BOT_REGISTRY_TABLE = "botregistry";
@@ -60,6 +60,5 @@ public class CassandraDao implements BaseDao<BotRegistry> {
     @Override
     public void cleanUp() {
         session.close();
-        session.execute("DROP KEYSPACE IF EXISTS "+KEY_SPACE);
     }
 }

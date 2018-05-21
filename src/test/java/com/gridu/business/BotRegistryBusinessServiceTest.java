@@ -3,9 +3,6 @@ package com.gridu.business;
 import com.gridu.model.BotRegistry;
 import com.gridu.persistence.ignite.IgniteBotRegistryDao;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
-import org.apache.ignite.configuration.IgniteConfiguration;
-import org.apache.ignite.spark.IgniteContext;
-import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -15,9 +12,10 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
+
+import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,20 +25,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class BotRegistryBusinessServiceTest {
 
     private BotRegistryBusinessService service;
+    @Mock
     private IgniteBotRegistryDao dao;
     private JavaSparkContext sparkContext;
-    private JavaIgniteContext igniteContext;
 
     @Before
     public void setup(){
         sparkContext = SparkArtifactsHelper.createSparkContext("local[*]", "botServiceTest");
-        igniteContext = new JavaIgniteContext(sparkContext, IgniteConfiguration::new);
-        dao = new IgniteBotRegistryDao(igniteContext);
+        dao = mock(IgniteBotRegistryDao.class);
         service = new BotRegistryBusinessService(dao);
     }
 
     @Test
     public void execute() {
+        service.execute(aRowDataSet(1));
+        final BotRegistryBusinessService spy = spy(service);
+        verify(spy,atMost(1)).identifyBots(any(Dataset.class));
+        verify(dao,atMost(1)).persist(any(Dataset.class));
 
     }
 
