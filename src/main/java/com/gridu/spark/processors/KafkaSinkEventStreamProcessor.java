@@ -5,7 +5,7 @@ import com.gridu.business.EventsBusinessService;
 import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.Event;
 import com.gridu.spark.StopBotJob;
-import com.gridu.spark.utils.OffsetUtils;
+import com.gridu.utils.OffsetUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;

@@ -1,15 +1,12 @@
-package com.gridu.spark.utils;
+package com.gridu.utils;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.spark.TaskContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.streaming.api.java.JavaInputDStream;
 import org.apache.spark.streaming.kafka010.CanCommitOffsets;
 import org.apache.spark.streaming.kafka010.HasOffsetRanges;
 import org.apache.spark.streaming.kafka010.OffsetRange;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.stream.IntStream;
 
 public class OffsetUtils     {

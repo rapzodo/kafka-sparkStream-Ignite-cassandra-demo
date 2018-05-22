@@ -1,9 +1,7 @@
 package com.gridu.persistence.ignite;
 
 import com.gridu.model.BotRegistry;
-import com.gridu.persistence.BaseDao;
-import com.gridu.persistence.cassandra.CassandraDao;
-import com.gridu.spark.utils.IgniteUtils;
+import com.gridu.utils.StopBotIgniteUtils;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -13,8 +11,6 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SaveMode;
-import org.apache.spark.sql.catalog.Table;
-import org.apache.spark.sql.functions;
 import scala.Tuple2;
 
 import javax.cache.expiry.Duration;
@@ -44,13 +40,13 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
         cacheConfiguration = new CacheConfiguration<>(BOTREGISTRY_CACHE);
         cacheConfiguration.setIndexedTypes(Long.class, BotRegistry.class);
         setExpirePolicy();
+        StopBotIgniteUtils.getTables().show();
         botsCache = ic.ignite().getOrCreateCache(cacheConfiguration);
-        IgniteUtils.getTables().show();
     }
 
     @Override
     public void persist(Dataset<BotRegistry> datasets) {
-        final boolean tableExists = IgniteUtils.doesTableExists(BOTREGISTRY_TABLE);
+        final boolean tableExists = StopBotIgniteUtils.doesTableExists(BOTREGISTRY_TABLE);
 
         IgniteDao.save(datasets, BOTREGISTRY_TABLE, IgniteEventDao.CONFIG_FILE,
                 "ip,url","template=partitioned",

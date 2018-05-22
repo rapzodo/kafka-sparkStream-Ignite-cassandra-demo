@@ -3,7 +3,6 @@ package com.gridu.persistence.ignite;
 import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.Event;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
-import com.gridu.spark.utils.IgniteUtils;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -23,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static com.gridu.utils.StopBotIgniteUtils.*;
 
 public class IgniteEventDaoTest {
 
@@ -48,7 +48,7 @@ public class IgniteEventDaoTest {
     }
 
     private static void startIgnite() {
-        ignite = Ignition.getOrStart(new IgniteConfiguration());
+        ignite = startIgniteForTests();
     }
 
     private static JavaRDD<Event> loadEventMessagesRdd() {
@@ -62,8 +62,8 @@ public class IgniteEventDaoTest {
                 .createDataset(eventJavaRDD.take(5), Encoders.bean(Event.class));
         igniteDao.persist(events);
 
-        IgniteUtils.getTables().show();
-        assertThat(IgniteUtils.doesTableExists(IgniteEventDao.EVENT_TABLE)).isTrue();
+        getTables().show();
+        assertThat(doesTableExists(IgniteEventDao.EVENT_TABLE)).isTrue();
     }
 
     @Test

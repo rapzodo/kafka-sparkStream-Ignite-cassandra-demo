@@ -2,7 +2,6 @@ package com.gridu.persistence.ignite;
 
 import com.gridu.model.BotRegistry;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
-import com.gridu.spark.utils.IgniteUtils;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -20,6 +19,7 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import static com.gridu.utils.StopBotIgniteUtils.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -40,7 +40,7 @@ public class IgniteBotRegistryDaoTest {
     }
 
     private static void startIgnite() {
-        ignite = Ignition.getOrStart(new IgniteConfiguration());
+        ignite = startIgniteForTests();
     }
 
     private JavaRDD<BotRegistry> getBotRegistryRdd() {
@@ -52,7 +52,7 @@ public class IgniteBotRegistryDaoTest {
         Dataset<BotRegistry> bots = createBotRegistryDataSet();
         igniteDao.persist(bots);
 
-        assertThat(IgniteUtils.doesTableExists(IgniteBotRegistryDao.BOTREGISTRY_TABLE)).isTrue();
+        assertThat(doesTableExists(IgniteBotRegistryDao.BOTREGISTRY_TABLE)).isTrue();
 
     }
 
