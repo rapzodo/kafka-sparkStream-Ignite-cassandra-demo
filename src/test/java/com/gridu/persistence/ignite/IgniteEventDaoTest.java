@@ -4,10 +4,11 @@ import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.Event;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.*;
@@ -39,6 +40,7 @@ public class IgniteEventDaoTest {
         ic = new JavaIgniteContext(sc,IgniteConfiguration::new);
         igniteDao = new IgniteEventDao(ic);
         sc.setLogLevel("ERROR");
+        Logger.getLogger("org.apache.ignite").setLevel(Level.ERROR);
         eventJavaRDD = loadEventMessagesRdd();
         destroyCache();
     }
@@ -109,7 +111,7 @@ public class IgniteEventDaoTest {
 
     @NotNull
     private List<Event> createEventsList() {
-        return Arrays.asList(new Event("click", "123.345", new Date().getTime(), "http://stopbot.com"));
+        return Collections.singletonList(new Event("click", "123.345", new Date().getTime(), "http://stopbot.com"));
     }
 
     private void clearEventsCache() {

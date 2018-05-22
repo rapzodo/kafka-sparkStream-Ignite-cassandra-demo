@@ -3,10 +3,11 @@ package com.gridu.persistence.ignite;
 import com.gridu.model.BotRegistry;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
@@ -36,6 +37,7 @@ public class IgniteBotRegistryDaoTest {
         sc = SparkArtifactsHelper.createSparkContext("local[*]", "botregistrydaotest");
         igniteDao = new IgniteBotRegistryDao(new JavaIgniteContext(sc, IgniteConfiguration::new));
         sc.setLogLevel("ERROR");
+        Logger.getLogger("org.apache.ignite").setLevel(Level.ERROR);
         ignite.cache(IgniteBotRegistryDao.BOTREGISTRY_CACHE).destroy();
     }
 

@@ -17,7 +17,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.streaming.Milliseconds;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
-import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,13 +29,26 @@ public class StopBotJob {
     public static final long SESSION_TIMEOUT_MS = 70000;
     public static final long BATCH_SIZE = 2000;
     public static final long HEARTBEAT_MS = 20000;
+    public static final ImmutableMap<String, Object> KAFKA_PROPS = ImmutableMap.<String, Object>builder()
+            .put("bootstrap.servers", "localhost:9092")
+            .put("key.deserializer", StringDeserializer.class)
+            .put("value.deserializer", StringDeserializer.class)
+            .put("group.id", "bot-buster-consumers")
+            .put("offsets.autocommit.enable", false)
+            .put("consumer.auto.offset.reset", "latest")
+            .put("consumer.session.timeout.ms", SESSION_TIMEOUT_MS)
+            .put("consumer.max.poll.records", BATCH_SIZE)
+            .put("consumer.group.max.session.timeout.ms", SESSION_TIMEOUT_MS)
+            .put("consumer.heartbeat.interval.ms", HEARTBEAT_MS)
+            .build();
+
+    public static final List<String> TOPICS = Arrays.asList("partners-events-topic");
 
     public static void main(String[] args) {
         setLogLevels();
         Ignition.setClientMode(true);
         try(Ignite ignite = Ignition.start()) {
-            List<String> topics = Arrays.asList("partners-events-topic");
-            Map<String, Object> kafkaProps = getConfiguration();
+            Map<String, Object> kafkaProps = KAFKA_PROPS;
 
             JavaStreamingContext javaStreamingContext = new JavaStreamingContext("local[*]", "stopbot",
                     Milliseconds.apply(POLL_MS));
@@ -53,7 +65,7 @@ public class StopBotJob {
             final IgniteEventDao eventDao = new IgniteEventDao(igniteContext);
             EventsBusinessService eventsBusinessService = new EventsBusinessService(eventDao);
 
-            KafkaSinkEventStreamProcessor processor = new KafkaSinkEventStreamProcessor(topics, kafkaProps, javaStreamingContext,
+            KafkaSinkEventStreamProcessor processor = new KafkaSinkEventStreamProcessor(TOPICS, kafkaProps, javaStreamingContext,
                     eventsBusinessService, botRegistryBusinessService);
 
             processor.process();
@@ -63,20 +75,5 @@ public class StopBotJob {
     private static void setLogLevels(){
         Logger.getLogger("com.gridu").setLevel(Level.INFO);
         Logger.getLogger("org.apache.ignite").setLevel(Level.ERROR);
-    }
-
-    private static ImmutableMap<String, Object> getConfiguration() {
-        return ImmutableMap.<String, Object>builder()
-                .put("bootstrap.servers", "localhost:9092")
-                .put("key.deserializer", StringDeserializer.class)
-                .put("value.deserializer", StringDeserializer.class)
-                .put("group.id", "bot-buster-consumers")
-                .put("offsets.autocommit.enable", false)
-                .put("consumer.auto.offset.reset", "latest")
-                .put("consumer.session.timeout.ms", SESSION_TIMEOUT_MS)
-                .put("consumer.max.poll.records", BATCH_SIZE)
-                .put("consumer.group.max.session.timeout.ms", SESSION_TIMEOUT_MS)
-                .put("consumer.heartbeat.interval.ms", HEARTBEAT_MS)
-                .build();
     }
 }

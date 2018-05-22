@@ -5,7 +5,7 @@ import org.apache.spark.sql.Dataset;
 import java.util.List;
 
 public interface BaseDao<T> {
-    static final long TTL = 3;
+    long TTL = 3;
 
     void setup();
 

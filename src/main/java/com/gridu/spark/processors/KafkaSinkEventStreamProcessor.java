@@ -47,14 +47,13 @@ public class KafkaSinkEventStreamProcessor {
     }
 
     public void process() {
-        jsc.sparkContext().setLogLevel("INFO");
 
         JavaInputDStream<ConsumerRecord<String, String>> stream = KafkaUtils.createDirectStream(jsc,
                 LocationStrategies.PreferConsistent(),
                 ConsumerStrategies.Subscribe(topics, props));
 
 
-        JavaDStream<String> eventMessages = stream.map(consumerRecord -> consumerRecord.value())
+        JavaDStream<String> eventMessages = stream.map(ConsumerRecord::value)
                 .window(Milliseconds.apply(StopBotJob.WINDOW_MS));
 
         eventMessages.foreachRDD((rdd, time) -> {

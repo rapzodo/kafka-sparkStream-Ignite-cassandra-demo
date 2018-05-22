@@ -9,10 +9,13 @@ import org.apache.spark.streaming.api.java.JavaStreamingContext;
 
 public class SparkArtifactsHelper {
 
+    public static JavaSparkContext createLocalSparkContext(String appName){
+        SparkConf sparkConf = new SparkConf().setAppName(appName).setMaster("local[*]");
+        return JavaSparkContext.fromSparkContext(SparkContext.getOrCreate(sparkConf));
+    }
 
     public static JavaSparkContext createSparkContext(String master, String appName) {
         SparkConf sparkConf = new SparkConf().setAppName(appName).setMaster(master);
-        sparkConf.set("spark.driver.allowMultipleContexts", "true");
         return JavaSparkContext.fromSparkContext(SparkContext.getOrCreate(sparkConf));
     }
 

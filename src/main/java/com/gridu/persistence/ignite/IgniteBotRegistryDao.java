@@ -40,7 +40,6 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
         cacheConfiguration = new CacheConfiguration<>(BOTREGISTRY_CACHE);
         cacheConfiguration.setIndexedTypes(Long.class, BotRegistry.class);
         setExpirePolicy();
-        StopBotIgniteUtils.getTables().show();
         botsCache = ic.ignite().getOrCreateCache(cacheConfiguration);
     }
 

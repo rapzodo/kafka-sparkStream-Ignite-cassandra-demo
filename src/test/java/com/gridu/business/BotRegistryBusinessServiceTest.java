@@ -37,7 +37,7 @@ public class BotRegistryBusinessServiceTest {
     }
 
     @Test
-    public void execute() {
+    public void testExecute() {
         service.execute(aRowDataSet(1));
         final BotRegistryBusinessService spy = spy(service);
         verify(spy,atMost(1)).identifyBots(any(Dataset.class));

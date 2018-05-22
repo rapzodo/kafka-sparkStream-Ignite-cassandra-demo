@@ -1,68 +1,68 @@
 package com.gridu.spark;
 
-import com.google.common.collect.ImmutableMap;
+import com.gridu.business.BotRegistryBusinessService;
+import com.gridu.business.EventsBusinessService;
+import com.gridu.persistence.cassandra.CassandraDao;
+import com.gridu.persistence.ignite.IgniteEventDao;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
-import com.gridu.spark.sql.SparkSQLEventDao;
-import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
+import com.gridu.utils.StopBotIgniteUtils;
+import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.spark.JavaIgniteContext;
+import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.streaming.Seconds;
 import org.apache.spark.streaming.api.java.JavaStreamingContext;
+import org.assertj.core.api.Assertions;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import static com.gridu.spark.StopBotJob.KAFKA_PROPS;
+import static com.gridu.spark.StopBotJob.TOPICS;
 
-import static org.assertj.core.api.Assertions.assertThat;
 
 public class KafkaSinkEventStreamProcessorTest{
     private KafkaSinkEventStreamProcessor processor;
-    private List<String> topics;
-    private Map<String,Object> kafkaprops;
-    private Dataset<Row> rows;
     private JavaStreamingContext javaStreamingContext;
-    private SparkSQLEventDao dao;
-    private SparkSession session;
+    private EventsBusinessService eventService;
+    private BotRegistryBusinessService botService;
+    private JavaIgniteContext ic;
+    private IgniteEventDao igniteEventDao;
+    private CassandraDao cassandraDao;
 
     @Before
+    @Ignore
     public void setup(){
-        topics = Arrays.asList("events-topic");
-        kafkaprops = ImmutableMap.<String, Object>builder()
-                .put("bootstrap.servers", "localhost:9092")
-                .put("key.deserializer", StringDeserializer.class)
-                .put("value.deserializer", StringDeserializer.class)
-                .put("group.id", "bot-buster-consumers")
-                .put("offsets.autocommit.enable", false)
-                .build();
+        StopBotIgniteUtils.startIgniteForTests();
+        final JavaSparkContext sc = SparkArtifactsHelper.createLocalSparkContext("processorTest");
+        javaStreamingContext = new JavaStreamingContext(sc, Seconds.apply(3));
+        ic = new JavaIgniteContext(sc,IgniteConfiguration::new);
+        igniteEventDao = new IgniteEventDao(ic);
+        eventService = new EventsBusinessService(igniteEventDao);
+        cassandraDao = new CassandraDao(sc.sc());
+        botService = new BotRegistryBusinessService(cassandraDao);
 
-        javaStreamingContext = new JavaStreamingContext(
-                SparkArtifactsHelper.createSparkContext("local[*]", "stopbotUnittests"),
-                Seconds.apply(3));
-
-        session = SparkSession.builder().getOrCreate();
-
-//        rows = session.read().option("header",true).text("./input/dataset").cache();
-
-        dao = new SparkSQLEventDao(javaStreamingContext.sparkContext().sc());
-
-//        processor = new KafkaSinkEventStreamProcessor(topics,kafkaprops, javaStreamingContext,dao);
+        processor = new KafkaSinkEventStreamProcessor(TOPICS,KAFKA_PROPS,
+                javaStreamingContext,eventService, botService);
+        ic.sc().setLogLevel("ERROR");
     }
 
 
 
     @Test
+    @Ignore
     public void testProcessing(){
         processor.process();
+        Assertions.assertThat(igniteEventDao.loadFromIgnite().first()).isNotNull();
+        Assertions.assertThat(cassandraDao.getAllRecords().isEmpty()).isFalse();
     }
 
     @After
+    @Ignore
     public void cleanUp(){
-        session.close();
+        ic.ignite().close();
+        ic.close(true);
     }
 
 }

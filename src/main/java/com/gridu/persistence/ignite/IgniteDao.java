@@ -17,7 +17,7 @@ import static org.apache.spark.sql.functions.col;
 
 public interface IgniteDao<K,T> extends BaseDao<T> {
 
-    public static final String CONFIG_FILE = "config/example-ignite.xml";
+    String CONFIG_FILE = "config/example-ignite.xml";
 
     default Dataset<Row> aggregateAndCount(Dataset<T> eventDataset, Column... groupedCols){
         if(groupedCols == null || groupedCols.length == 0){
