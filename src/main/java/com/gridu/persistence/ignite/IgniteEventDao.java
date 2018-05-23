@@ -35,11 +35,6 @@ public class IgniteEventDao implements IgniteDao<Long,Event> {
     }
 
     @Override
-    public void persist(Dataset<Event> datasets){
-        IgniteDao.save(datasets, EVENT_TABLE, CONFIG_FILE,"ip,datetime,url","template=replicated",SaveMode.Ignore);
-    }
-
-    @Override
     public JavaIgniteRDD<Long, Event> createAnSaveIgniteRdd(JavaRDD<Event> rdd){
         JavaIgniteRDD<Long, Event> igniteRDD = ic.<Long,Event>fromCache(eventsCacheCfg);
         igniteRDD.savePairs(rdd.mapToPair(event -> new Tuple2<>(IgniteDao.generateIgniteUuid(),event)));
