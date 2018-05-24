@@ -67,7 +67,7 @@ public class KafkaSinkEventStreamProcessor {
 
                 JavaRDD<Event> eventsRDD = rdd.map(JsonEventMessageConverter::fromJson);
 
-                final Dataset<Row> bots = eventsBusinessService.saveAggregateAndCountEvents(eventsBusinessService.createAnSaveIgniteRdd(eventsRDD));
+                final Dataset<Row> bots = eventsBusinessService.saveAggregateAndCountEvents(eventsRDD);
 
                 final Dataset<BotRegistry> botRegistryDataset = eventsBusinessService.identifyBots(bots).cache();
 
