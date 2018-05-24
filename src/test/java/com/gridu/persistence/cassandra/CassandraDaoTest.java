@@ -1,7 +1,7 @@
 package com.gridu.persistence.cassandra;
 
 import com.gridu.model.BotRegistry;
-import com.gridu.persistence.BaseDao;
+import com.gridu.persistence.Repository;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
@@ -18,13 +18,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 public class CassandraDaoTest {
 
     private JavaSparkContext sparkContext;
-    private CassandraDao dao;
+    private CassandraService dao;
 
     @Before
     public void setup(){
         sparkContext = SparkArtifactsHelper
                 .createSparkContext("local[*]", "cassandraTest");
-        dao = new CassandraDao(sparkContext.sc());
+        dao = new CassandraService(sparkContext.sc());
     }
 
     @Test
@@ -40,7 +40,7 @@ public class CassandraDaoTest {
 
     @Test
     public void shouldRemoveRecordAfterTTLExpires() throws InterruptedException {
-        Thread.sleep((BaseDao.TTL + 2) * 1000);
+        Thread.sleep((Repository.TTL + 2) * 1000);
         assertThat(dao.getAllRecords().isEmpty()).isTrue();
     }
 

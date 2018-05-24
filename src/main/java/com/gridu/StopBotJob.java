@@ -1,13 +1,11 @@
 package com.gridu;
 
 import com.google.common.collect.ImmutableMap;
-import com.gridu.business.BotRegistryBusinessService;
-import com.gridu.business.EventsBusinessService;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
-import com.gridu.persistence.BaseDao;
-import com.gridu.persistence.cassandra.CassandraDao;
-import com.gridu.persistence.ignite.IgniteEventDao;
+import com.gridu.persistence.Repository;
+import com.gridu.persistence.cassandra.CassandraService;
+import com.gridu.persistence.ignite.IgniteEventService;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
@@ -57,18 +55,14 @@ public class StopBotJob {
             final JavaIgniteContext<Long, Event> igniteContext = new JavaIgniteContext<>(javaStreamingContext.sparkContext()
                     , IgniteConfiguration::new);
 
-            final IgniteEventDao eventDao = new IgniteEventDao(igniteContext);
-            EventsBusinessService eventsBusinessService = new EventsBusinessService(eventDao);
+//            final IgniteBotRegistryService botRegistryDao = new IgniteBotRegistryService(igniteContext);
 
-//            final IgniteBotRegistryDao botRegistryDao = new IgniteBotRegistryDao(igniteContext);
+            final IgniteEventService igniteEventService = new IgniteEventService(igniteContext);
 
-            final BaseDao<BotRegistry> botRegistryDao = new CassandraDao(javaStreamingContext.sparkContext().sc());
-
-            BotRegistryBusinessService botRegistryBusinessService = new BotRegistryBusinessService(botRegistryDao);
-
+            final Repository<BotRegistry> cassandraService = new CassandraService(javaStreamingContext.sparkContext().sc());
 
             KafkaSinkEventStreamProcessor processor = new KafkaSinkEventStreamProcessor(TOPICS, kafkaProps, javaStreamingContext,
-                    eventsBusinessService, botRegistryBusinessService);
+                    igniteEventService, cassandraService);
 
             processor.process();
         }

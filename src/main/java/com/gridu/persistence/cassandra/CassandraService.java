@@ -3,7 +3,7 @@ package com.gridu.persistence.cassandra;
 import com.datastax.driver.core.Session;
 import com.datastax.spark.connector.cql.CassandraConnector;
 import com.gridu.model.BotRegistry;
-import com.gridu.persistence.BaseDao;
+import com.gridu.persistence.Repository;
 import org.apache.spark.SparkContext;
 import org.apache.spark.sql.Dataset;
 import org.joda.time.Duration;
@@ -14,7 +14,7 @@ import java.util.List;
 
 import static com.datastax.spark.connector.japi.CassandraJavaUtil.*;
 
-public class CassandraDao implements BaseDao<BotRegistry> {
+public class CassandraService implements Repository<BotRegistry> {
     private Logger logger = LoggerFactory.getLogger(getClass());
 
     public static final String KEY_SPACE = "stopbot";
@@ -24,7 +24,7 @@ public class CassandraDao implements BaseDao<BotRegistry> {
     private Session session;
 
 
-    public CassandraDao(SparkContext sc) {
+    public CassandraService(SparkContext sc) {
         this.sc = sc;
         setup();
     }

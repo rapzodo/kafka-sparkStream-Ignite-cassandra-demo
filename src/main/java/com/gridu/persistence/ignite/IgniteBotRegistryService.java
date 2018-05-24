@@ -6,12 +6,11 @@ import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
-import org.apache.ignite.spark.JavaIgniteRDD;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.SaveMode;
-import scala.Tuple2;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.cache.expiry.Duration;
 import javax.cache.expiry.ModifiedExpiryPolicy;
@@ -22,53 +21,43 @@ import java.util.stream.Collectors;
 
 import static org.apache.ignite.spark.IgniteDataFrameSettings.*;
 
-public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
+public class IgniteBotRegistryService implements IgniteService<Long, BotRegistry> {
 
-    public static final String BOTREGISTRY_TABLE = "BOTREGISTRY";
-    public static final String BOTREGISTRY_CACHE = "botRegistryCache";
+    private static final Logger logger = LoggerFactory.getLogger(IgniteBotRegistryService.class);
+
+    public static final String BOT_REGISTRY_TABLE = "BOTREGISTRY";
+    public static final String BOT_REGISTRY_CACHE = "botRegistryCache";
     private JavaIgniteContext<Long,BotRegistry> ic;
     private CacheConfiguration<Long,BotRegistry> cacheConfiguration;
     private IgniteCache<Long,BotRegistry> botsCache;
 
-    public IgniteBotRegistryDao(JavaIgniteContext javaIgniteContext) {
+    public IgniteBotRegistryService(JavaIgniteContext javaIgniteContext) {
         ic = javaIgniteContext;
         setup();
     }
 
     @Override
     public void setup() {
-        cacheConfiguration = new CacheConfiguration<>(BOTREGISTRY_CACHE);
+        cacheConfiguration = new CacheConfiguration<>(BOT_REGISTRY_CACHE);
         cacheConfiguration.setIndexedTypes(Long.class, BotRegistry.class);
         setExpirePolicy();
         botsCache = ic.ignite().getOrCreateCache(cacheConfiguration);
+        StopBotIgniteUtils.getTables().show();
     }
 
     @Override
     public void persist(Dataset<BotRegistry> datasets) {
-        final boolean tableExists = StopBotIgniteUtils.doesTableExists(BOTREGISTRY_TABLE);
+        final boolean tableExists = StopBotIgniteUtils.doesTableExists(BOT_REGISTRY_TABLE);
 
-        IgniteDao.save(datasets, BOTREGISTRY_TABLE, IgniteEventDao.CONFIG_FILE,
+        IgniteService.save(datasets, BOT_REGISTRY_TABLE, IgniteEventService.CONFIG_FILE,
                 "ip,url","template=partitioned",
                 tableExists ? SaveMode.Append : SaveMode.Ignore);
     }
 
     @Override
-    public JavaIgniteRDD<Long, BotRegistry> createAnSaveIgniteRdd(JavaRDD<BotRegistry> rdd) {
-        JavaIgniteRDD<Long, BotRegistry> igniteRDD = ic.<Long,BotRegistry>fromCache(cacheConfiguration);
-        igniteRDD.savePairs(rdd.mapToPair(botRegistry -> new Tuple2<>(IgniteDao.generateIgniteUuid(),botRegistry)));
-        return igniteRDD;
-    }
-
-    @Override
-    public Dataset<BotRegistry> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<Long, BotRegistry> rdd) {
-        return rdd.sql("select * from "+ BOTREGISTRY_TABLE).as(Encoders.bean(BotRegistry.class));
-    }
-
-    @Override
     public List<BotRegistry> getAllRecords(){
-        botsCache = ic.ignite().getOrCreateCache(BOTREGISTRY_CACHE);
         List<List<?>> all = botsCache
-                .query(new SqlFieldsQuery("select * from " + BOTREGISTRY_TABLE))
+                .query(new SqlFieldsQuery("select * from " + BOT_REGISTRY_TABLE))
                 .getAll();
         return all.stream().map(objects -> new BotRegistry(objects.get(0).toString(),
                 objects.get(1).toString(),
@@ -84,12 +73,12 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
     @Override
     public Dataset<BotRegistry> loadFromIgnite() {
         return ic.ic().sqlContext().read().format(FORMAT_IGNITE())
-                .option(OPTION_TABLE(),IgniteBotRegistryDao.BOTREGISTRY_TABLE)
-                .option(OPTION_CONFIG_FILE(),IgniteEventDao.CONFIG_FILE)
+                .option(OPTION_TABLE(),IgniteBotRegistryService.BOT_REGISTRY_TABLE)
+                .option(OPTION_CONFIG_FILE(),IgniteEventService.CONFIG_FILE)
                 .load().as(Encoders.bean(BotRegistry.class));
     }
 
-    public void setExpirePolicy(){
+    private void setExpirePolicy(){
         cacheConfiguration.setExpiryPolicyFactory(ModifiedExpiryPolicy
                 .factoryOf(new Duration(TimeUnit.SECONDS,TTL)));
     }

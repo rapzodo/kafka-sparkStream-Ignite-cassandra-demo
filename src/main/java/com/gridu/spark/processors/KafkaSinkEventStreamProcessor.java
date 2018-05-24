@@ -1,10 +1,11 @@
 package com.gridu.spark.processors;
 
-import com.gridu.business.BotRegistryBusinessService;
-import com.gridu.business.EventsBusinessService;
+import com.gridu.StopBotJob;
 import com.gridu.converters.JsonEventMessageConverter;
+import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
-import com.gridu.spark.StopBotJob;
+import com.gridu.persistence.Repository;
+import com.gridu.persistence.ignite.IgniteEventService;
 import com.gridu.utils.OffsetUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
@@ -32,28 +33,29 @@ public class KafkaSinkEventStreamProcessor {
     private List<String> topics;
     private Map<String, Object> props;
     private JavaStreamingContext jsc;
-    private BotRegistryBusinessService botRegistryBusinessService;
-    private EventsBusinessService eventsBusinessService;
+    private IgniteEventService eventsBusinessService;
+    private Repository<BotRegistry> botRegistryRepository;
 
     public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props,
                                          JavaStreamingContext jsc,
-                                         EventsBusinessService eventsBusinessService,
-                                         BotRegistryBusinessService botRegistryBusinessService) {
+                                         IgniteEventService eventsBusinessService,
+                                         Repository botRegistryRepository) {
         this.topics = topics;
         this.props = props;
         this.jsc = jsc;
-        this.botRegistryBusinessService = botRegistryBusinessService;
         this.eventsBusinessService = eventsBusinessService;
+        this.botRegistryRepository = botRegistryRepository;
     }
 
     public void process() {
+        jsc.sparkContext().setLogLevel("INFO");
 
         JavaInputDStream<ConsumerRecord<String, String>> stream = KafkaUtils.createDirectStream(jsc,
                 LocationStrategies.PreferConsistent(),
                 ConsumerStrategies.Subscribe(topics, props));
 
 
-        JavaDStream<String> eventMessages = stream.map(ConsumerRecord::value)
+        JavaDStream<String> eventMessages = stream.map(consumerRecord -> consumerRecord.value())
                 .window(Milliseconds.apply(StopBotJob.WINDOW_MS));
 
         eventMessages.foreachRDD((rdd, time) -> {
@@ -65,13 +67,14 @@ public class KafkaSinkEventStreamProcessor {
 
                 JavaRDD<Event> eventsRDD = rdd.map(JsonEventMessageConverter::fromJson);
 
-                final Dataset<Row> bots = eventsBusinessService.execute(eventsRDD).cache();
+                final Dataset<Row> bots = eventsBusinessService.saveAggregateAndCountEvents(eventsBusinessService.createAnSaveIgniteRdd(eventsRDD));
 
-                final long bostsCount = bots.count();
+                final Dataset<BotRegistry> botRegistryDataset = eventsBusinessService.identifyBots(bots).cache();
 
-                if (bostsCount > 0) {
-                    botRegistryBusinessService.execute(bots);
-//                    logger.info("!!! {} BOTS IN BLACKLIST !!!",bostsCount);
+                final long botsCount = botRegistryDataset.count();
+
+                if (botsCount > 0) {
+                    botRegistryRepository.persist(botRegistryDataset);
                 }
             }
 

@@ -4,11 +4,10 @@ import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.Event;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import org.apache.ignite.Ignite;
+import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.*;
@@ -18,16 +17,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static com.gridu.utils.StopBotIgniteUtils.*;
 
-public class IgniteEventDaoTest {
+public class IgniteEventServiceTest {
 
-    private static IgniteEventDao igniteDao;
+    private static IgniteEventService igniteEventService;
     private static JavaSparkContext sc;
     private static JavaRDD<Event> eventJavaRDD;
     private static JavaIgniteContext ic;
@@ -38,19 +36,13 @@ public class IgniteEventDaoTest {
         startIgnite();
         sc = SparkArtifactsHelper.createSparkContext("local[*]", "igniteeventdaotest");
         ic = new JavaIgniteContext(sc,IgniteConfiguration::new);
-        igniteDao = new IgniteEventDao(ic);
+        igniteEventService = new IgniteEventService(ic);
         sc.setLogLevel("ERROR");
-        Logger.getLogger("org.apache.ignite").setLevel(Level.ERROR);
         eventJavaRDD = loadEventMessagesRdd();
-        destroyCache();
-    }
-
-    private static void destroyCache() {
-        ignite.cache(IgniteEventDao.EVENTS_CACHE_NAME).destroy();
     }
 
     private static void startIgnite() {
-        ignite = startIgniteForTests();
+        ignite = Ignition.getOrStart(new IgniteConfiguration());
     }
 
     private static JavaRDD<Event> loadEventMessagesRdd() {
@@ -62,23 +54,23 @@ public class IgniteEventDaoTest {
     public void shouldCreateTableAndPersistEventsToIgnite() {
         Dataset<Event> events = SparkSession.builder().sparkContext(sc.sc()).getOrCreate()
                 .createDataset(eventJavaRDD.take(5), Encoders.bean(Event.class));
-        igniteDao.persist(events);
+        igniteEventService.persist(events);
 
         getTables().show();
-        assertThat(doesTableExists(IgniteEventDao.EVENT_TABLE)).isTrue();
+        assertThat(doesTableExists(IgniteEventService.EVENT_TABLE)).isTrue();
     }
 
     @Test
     public void shouldSaveAllJavaRddToIgniteRDD() {
-        JavaIgniteRDD<Long, Event> igniteRdd = igniteDao.createAnSaveIgniteRdd(sc.parallelize(createEventsList()));
+        JavaIgniteRDD<Long, Event> igniteRdd = igniteEventService.createAnSaveIgniteRdd(sc.parallelize(createEventsList()));
         assertThat(igniteRdd.count()).isEqualTo(1);
     }
 
     @Test
     public void shouldSqlEventsDsFromJavaRdd() {
         clearEventsCache();
-        JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(sc.parallelize(createEventsList()));
-        Dataset<Event> dataSetFromJavaRdd = igniteDao.getDataSetFromIgniteJavaRdd(igniteRDD);
+        JavaIgniteRDD<Long, Event> igniteRDD = igniteEventService.createAnSaveIgniteRdd(sc.parallelize(createEventsList()));
+        Dataset<Event> dataSetFromJavaRdd = igniteEventService.getDataSetFromIgniteJavaRdd(igniteRDD);
         assertThat(igniteRDD.count()).isEqualTo(1);
         assertThat(dataSetFromJavaRdd.count()).isEqualTo(igniteRDD.count());
     }
@@ -86,41 +78,42 @@ public class IgniteEventDaoTest {
 
     @Test
     public void shouldAggregateAndCountIpUrlActionsAndOrderByDesc() {
-        JavaIgniteRDD<Long, Event> igniteRDD = igniteDao.createAnSaveIgniteRdd(eventJavaRDD);
-        Dataset<Row> aggregatedDS = igniteDao.aggregateAndCount(igniteDao.getDataSetFromIgniteJavaRdd(igniteRDD),
-                functions.col("ip"),functions.col("url")).cache();
-        aggregatedDS.show(false);
-        assertThat(aggregatedDS.first().get(2)).isEqualTo(19L);
+        final Dataset<Row> aggregatedEvents = igniteEventService
+                .saveAggregateAndCountEvents(sc.parallelize(createEventsList()));
+        aggregatedEvents.show(false);
+        assertThat(aggregatedEvents.first().get(2)).isEqualTo(19L);
+    }
+
+    private JavaIgniteRDD<Long, Event> getJavaIgniteRDD() {
+        return igniteEventService.createAnSaveIgniteRdd(sc.parallelize(createEventsList()));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenNoColumnsAreProvided(){
-        final Dataset<Event> eventDataset = SparkArtifactsHelper.createSparkSession(sc)
-                .createDataset(Collections.singletonList(new Event()), Encoders.bean(Event.class));
-        igniteDao.aggregateAndCount(eventDataset);
+        igniteEventService.selectAggregateAndCount(getJavaIgniteRDD(), IgniteEventService.EVENT_TABLE);
     }
+
     @Test
     public void shouldSelectAllEventsFromEventTable(){
         clearEventsCache();
-        List<Event> eventsList = createEventsList();
-        igniteDao.createAnSaveIgniteRdd(sc.parallelize(eventsList));
-        List<Event> events = igniteDao.getAllRecords();
+        igniteEventService.createAnSaveIgniteRdd(sc.parallelize(createEventsList()));
+        List<Event> events = igniteEventService.getAllRecords();
         assertThat(events).hasSize(1);
         assertThat(events.get(0).getIp()).isEqualTo("123.345");
     }
 
     @NotNull
     private List<Event> createEventsList() {
-        return Collections.singletonList(new Event("click", "123.345", new Date().getTime(), "http://stopbot.com"));
+        return Arrays.asList(new Event("click", "123.345", new Date().getTime(), "http://stopbot.com"));
     }
 
     private void clearEventsCache() {
-        ignite.cache(IgniteEventDao.EVENTS_CACHE_NAME).clear();
+        ignite.cache(IgniteEventService.EVENTS_CACHE_NAME).clear();
     }
 
     @AfterClass
     public static void cleanUp() {
-        igniteDao.cleanUp();
+        igniteEventService.cleanUp();
         ignite.close();
         sc.close();
     }

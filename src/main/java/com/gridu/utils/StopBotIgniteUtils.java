@@ -1,6 +1,5 @@
 package com.gridu.utils;
 
-import com.gridu.persistence.ignite.IgniteEventDao;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -29,8 +28,6 @@ public class StopBotIgniteUtils {
                  .appName("Spark Ignite catalog example")
                  .master("local")
                  .config("spark.executor.instances", "2")
-                 //Only additional option to refer to Ignite cluster.
-                 .igniteConfig(IgniteEventDao.CONFIG_FILE)
                  .getOrCreate();
     }
 
