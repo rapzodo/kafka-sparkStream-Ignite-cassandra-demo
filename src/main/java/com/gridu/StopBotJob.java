@@ -45,7 +45,6 @@ public class StopBotJob {
 
     public static void main(String[] args) {
         setLogLevels();
-        Ignition.setClientMode(true);
         try(Ignite ignite = Ignition.start()) {
             Map<String, Object> kafkaProps = KAFKA_PROPS;
 

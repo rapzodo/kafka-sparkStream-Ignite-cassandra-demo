@@ -1,5 +1,6 @@
 package com.gridu.utils;
 
+import com.gridu.persistence.ignite.IgniteService;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -28,6 +29,7 @@ public class StopBotIgniteUtils {
                  .appName("Spark Ignite catalog example")
                  .master("local")
                  .config("spark.executor.instances", "2")
+                .igniteConfig(IgniteService.CONFIG_FILE)
                  .getOrCreate();
     }
 

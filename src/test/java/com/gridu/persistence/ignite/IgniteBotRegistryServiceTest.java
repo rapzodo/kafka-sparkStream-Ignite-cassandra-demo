@@ -6,7 +6,6 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
-import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -39,10 +38,6 @@ public class IgniteBotRegistryServiceTest {
 
     private static void startIgnite() {
         ignite = Ignition.getOrStart(new IgniteConfiguration());
-    }
-
-    private JavaRDD<BotRegistry> getBotRegistryRdd() {
-        return createBotRegistryDataSet().toJavaRDD();
     }
 
     @Test
