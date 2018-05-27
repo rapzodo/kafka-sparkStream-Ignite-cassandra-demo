@@ -1,9 +1,7 @@
 package com.gridu.spark;
 
-import com.gridu.business.BotRegistryBusinessService;
-import com.gridu.business.EventsBusinessService;
-import com.gridu.persistence.cassandra.CassandraDao;
-import com.gridu.persistence.ignite.IgniteEventDao;
+import com.gridu.persistence.cassandra.CassandraService;
+import com.gridu.persistence.ignite.IgniteEventStrategy;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
 import com.gridu.utils.StopBotIgniteUtils;
@@ -18,18 +16,16 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static com.gridu.spark.StopBotJob.KAFKA_PROPS;
-import static com.gridu.spark.StopBotJob.TOPICS;
+import static com.gridu.StopBotJob.KAFKA_PROPS;
+import static com.gridu.StopBotJob.TOPICS;
 
 
 public class KafkaSinkEventStreamProcessorTest{
     private KafkaSinkEventStreamProcessor processor;
     private JavaStreamingContext javaStreamingContext;
-    private EventsBusinessService eventService;
-    private BotRegistryBusinessService botService;
+    private IgniteEventStrategy eventService;
+    private CassandraService botService;
     private JavaIgniteContext ic;
-    private IgniteEventDao igniteEventDao;
-    private CassandraDao cassandraDao;
 
     @Before
     @Ignore
@@ -38,10 +34,8 @@ public class KafkaSinkEventStreamProcessorTest{
         final JavaSparkContext sc = SparkArtifactsHelper.createLocalSparkContext("processorTest");
         javaStreamingContext = new JavaStreamingContext(sc, Seconds.apply(3));
         ic = new JavaIgniteContext(sc,IgniteConfiguration::new);
-        igniteEventDao = new IgniteEventDao(ic);
-        eventService = new EventsBusinessService(igniteEventDao);
-        cassandraDao = new CassandraDao(sc.sc());
-        botService = new BotRegistryBusinessService(cassandraDao);
+        eventService = new IgniteEventStrategy(ic);
+        botService = new CassandraService(sc.sc());
 
         processor = new KafkaSinkEventStreamProcessor(TOPICS,KAFKA_PROPS,
                 javaStreamingContext,eventService, botService);
@@ -54,8 +48,8 @@ public class KafkaSinkEventStreamProcessorTest{
     @Ignore
     public void testProcessing(){
         processor.process();
-        Assertions.assertThat(igniteEventDao.loadFromIgnite().first()).isNotNull();
-        Assertions.assertThat(cassandraDao.getAllRecords().isEmpty()).isFalse();
+        Assertions.assertThat(eventService.loadFromIgnite().first()).isNotNull();
+        Assertions.assertThat(botService.getAllRecords().isEmpty()).isFalse();
     }
 
     @After

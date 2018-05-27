@@ -1,9 +1,10 @@
 package com.gridu.utils;
 
-import com.gridu.persistence.ignite.IgniteEventDao;
+import com.gridu.persistence.ignite.IgniteStrategy;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
+import org.apache.ignite.lang.IgniteUuid;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.catalog.Catalog;
@@ -29,8 +30,7 @@ public class StopBotIgniteUtils {
                  .appName("Spark Ignite catalog example")
                  .master("local")
                  .config("spark.executor.instances", "2")
-                 //Only additional option to refer to Ignite cluster.
-                 .igniteConfig(IgniteEventDao.CONFIG_FILE)
+                .igniteConfig(IgniteStrategy.CONFIG_FILE)
                  .getOrCreate();
     }
 
@@ -38,5 +38,9 @@ public class StopBotIgniteUtils {
         final IgniteConfiguration cfg = new IgniteConfiguration()
                 .setDiscoverySpi(new TcpDiscoverySpi());
         return Ignition.getOrStart(cfg);
+    }
+
+    public static long generateIgniteUuidLocalId(){
+        return IgniteUuid.randomUuid().localId();
     }
 }

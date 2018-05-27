@@ -1,12 +1,10 @@
 package com.gridu.persistence.cassandra;
 
 import com.gridu.model.BotRegistry;
-import com.gridu.persistence.BaseDao;
+import com.gridu.persistence.Repository;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.SparkSession;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,32 +13,29 @@ import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-public class CassandraDaoTest {
+public class CassandraStrategyTest {
 
     private JavaSparkContext sparkContext;
-    private CassandraDao dao;
+    private CassandraService dao;
 
     @Before
     public void setup(){
         sparkContext = SparkArtifactsHelper
                 .createSparkContext("local[*]", "cassandraTest");
-        dao = new CassandraDao(sparkContext.sc());
+        dao = new CassandraService(sparkContext.sc());
     }
 
     @Test
     public void shouldPersistBotRegistryToCassandra(){
-        final SparkSession session = SparkArtifactsHelper.createSparkSession(sparkContext);
-        final Dataset<BotRegistry> botRegistryDataset = session
-                .createDataset(Collections.singletonList(
-                        new BotRegistry("123", "some.url", 1))
-                , Encoders.bean(BotRegistry.class));
-        dao.persist(botRegistryDataset);
+        final JavaRDD<BotRegistry> botRegistryJavaRDD = sparkContext.parallelize(Collections.singletonList(
+                new BotRegistry("123", "some.url", 1)));
+        dao.persist(botRegistryJavaRDD);
         assertThat(dao.getAllRecords()).hasSize(1);
     }
 
     @Test
     public void shouldRemoveRecordAfterTTLExpires() throws InterruptedException {
-        Thread.sleep((BaseDao.TTL + 2) * 1000);
+        Thread.sleep((Repository.TTL + 2) * 1000);
         assertThat(dao.getAllRecords().isEmpty()).isTrue();
     }
 
