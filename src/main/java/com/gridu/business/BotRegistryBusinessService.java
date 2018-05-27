@@ -1,8 +1,7 @@
 package com.gridu.business;
 
-import com.gridu.ignite.sql.IgniteBotRegistryDao;
-import com.gridu.ignite.sql.IgniteDao;
 import com.gridu.model.BotRegistry;
+import com.gridu.persistence.BaseDao;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
@@ -14,10 +13,10 @@ public class BotRegistryBusinessService implements StopBotBusinessService<Datase
     public static final int URL_COL = 1;
     public static final int COUNT_COL = 2;
     private Logger logger = LoggerFactory.getLogger(getClass());
-    private IgniteDao dao;
+    private BaseDao dao;
     private static final long ACTIONS_THRESHOLD = 10;
 
-    public BotRegistryBusinessService(IgniteBotRegistryDao dao) {
+    public BotRegistryBusinessService(BaseDao dao) {
         this.dao = dao;
     }
 
@@ -27,6 +26,8 @@ public class BotRegistryBusinessService implements StopBotBusinessService<Datase
         logger.info("!!!{} BOTS IDENTIFIED!!!",bots.count());
         bots.show();
         dao.persist(bots);
+
+        logger.info(">>> BOTS REGISTERED IN CASSANDRA BLACKLIST : {} <<<",dao.getAllRecords().size());
         return null;
     }
 
@@ -34,10 +35,6 @@ public class BotRegistryBusinessService implements StopBotBusinessService<Datase
         return aggregatedDs
                 .filter(row -> row.getLong(COUNT_COL) > ACTIONS_THRESHOLD)
                 .as(Encoders.bean(BotRegistry.class));
-    }
-
-    public Dataset<BotRegistry> removeExpiredBotsFromBlackList(){
-        return null;
     }
 
 }

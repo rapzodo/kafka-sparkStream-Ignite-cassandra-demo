@@ -1,7 +1,6 @@
-package com.gridu.ignite.sql;
+package com.gridu.persistence.ignite;
 
-import com.gridu.model.BotRegistry;
-import com.gridu.model.Event;
+import com.gridu.persistence.BaseDao;
 import org.apache.ignite.lang.IgniteUuid;
 import org.apache.ignite.spark.IgniteDataFrameSettings;
 import org.apache.ignite.spark.JavaIgniteRDD;
@@ -10,16 +9,17 @@ import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.catalog.Catalog;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.ignite.IgniteSparkSession;
 
-import java.util.List;
-
 import static org.apache.spark.sql.functions.col;
 
-public interface IgniteDao<K,T> {
+public interface IgniteDao<K,T> extends BaseDao<T> {
 
-    default Dataset<Row> aggregateAndCount(Dataset<Event> eventDataset, Column... groupedCols){
+    String CONFIG_FILE = "config/example-ignite.xml";
+
+    default Dataset<Row> aggregateAndCount(Dataset<T> eventDataset, Column... groupedCols){
         if(groupedCols == null || groupedCols.length == 0){
             throw new IllegalArgumentException("at least on column should be provided");
         }
@@ -29,20 +29,6 @@ public interface IgniteDao<K,T> {
                 .orderBy(col("count").desc());
     }
 
-    static Dataset<Table> getDataTables(){
-        IgniteSparkSession igniteSession = IgniteSparkSession.builder()
-                .appName("Spark Ignite catalog example")
-                .master("local")
-                .config("spark.executor.instances", "2")
-                //Only additional option to refer to Ignite cluster.
-                .igniteConfig(IgniteEventDao.CONFIG_FILE)
-                .getOrCreate();
-
-
-// This will print out info about all SQL tables existed in Ignite.
-        return igniteSession.catalog().listTables();
-    }
-
     static void save(Dataset dataset,String table, String configFile,String pKeys,String tableParams,SaveMode saveMode){
         dataset.write()
                 .format(IgniteDataFrameSettings.FORMAT_IGNITE())
@@ -50,6 +36,8 @@ public interface IgniteDao<K,T> {
                 .option(IgniteDataFrameSettings.OPTION_CONFIG_FILE(), configFile)
                 .option(IgniteDataFrameSettings.OPTION_CREATE_TABLE_PRIMARY_KEY_FIELDS(),pKeys)
                 .option(IgniteDataFrameSettings.OPTION_CREATE_TABLE_PARAMETERS(),tableParams)
+//                .option(IgniteDataFrameSettings.OPTION_STREAMER_FLUSH_FREQUENCY(),3000)
+//                .option(IgniteDataFrameSettings.OPTION_STREAMER_ALLOW_OVERWRITE(),true)
                 .mode(saveMode)
                 .save();
     }
@@ -58,15 +46,10 @@ public interface IgniteDao<K,T> {
         return IgniteUuid.randomUuid().localId();
     }
 
-    void persist(Dataset<T> datasets);
-
     JavaIgniteRDD<K, T> createAnSaveIgniteRdd(JavaRDD<T> rdd);
 
     Dataset<T> getDataSetFromIgniteJavaRdd(JavaIgniteRDD<K,T> rdd);
 
-    List<T> getAllRecords();
-
     Dataset<T> loadFromIgnite();
 
-    void closeResource();
 }

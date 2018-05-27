@@ -78,7 +78,6 @@ public class Event implements Serializable{
 
     @Override
     public int hashCode() {
-
         return Objects.hash(getType(), getIp(), getDatetime(), getUrl());
     }
 

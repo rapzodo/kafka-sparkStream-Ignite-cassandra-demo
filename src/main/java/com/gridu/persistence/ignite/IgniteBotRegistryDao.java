@@ -1,20 +1,23 @@
-package com.gridu.ignite.sql;
+package com.gridu.persistence.ignite;
 
 import com.gridu.model.BotRegistry;
-import com.gridu.model.Event;
+import com.gridu.utils.StopBotIgniteUtils;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
-import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
-import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.*;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.SaveMode;
 import scala.Tuple2;
 
+import javax.cache.expiry.Duration;
+import javax.cache.expiry.ModifiedExpiryPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.apache.ignite.spark.IgniteDataFrameSettings.*;
@@ -25,17 +28,28 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
     public static final String BOTREGISTRY_CACHE = "botRegistryCache";
     private JavaIgniteContext<Long,BotRegistry> ic;
     private CacheConfiguration<Long,BotRegistry> cacheConfiguration;
+    private IgniteCache<Long,BotRegistry> botsCache;
 
     public IgniteBotRegistryDao(JavaIgniteContext javaIgniteContext) {
+        ic = javaIgniteContext;
+        setup();
+    }
+
+    @Override
+    public void setup() {
         cacheConfiguration = new CacheConfiguration<>(BOTREGISTRY_CACHE);
         cacheConfiguration.setIndexedTypes(Long.class, BotRegistry.class);
-//        cacheConfiguration.setSqlSchema("PUBLIC");
-        ic = javaIgniteContext;
+        setExpirePolicy();
+        botsCache = ic.ignite().getOrCreateCache(cacheConfiguration);
     }
 
     @Override
     public void persist(Dataset<BotRegistry> datasets) {
-        IgniteDao.save(datasets, BOTREGISTRY_TABLE, IgniteEventDao.CONFIG_FILE,"ip,url","template=partitioned",SaveMode.Append);
+        final boolean tableExists = StopBotIgniteUtils.doesTableExists(BOTREGISTRY_TABLE);
+
+        IgniteDao.save(datasets, BOTREGISTRY_TABLE, IgniteEventDao.CONFIG_FILE,
+                "ip,url","template=partitioned",
+                tableExists ? SaveMode.Append : SaveMode.Ignore);
     }
 
     @Override
@@ -52,15 +66,19 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
 
     @Override
     public List<BotRegistry> getAllRecords(){
-        IgniteCache<Long, BotRegistry> blacklistCache = ic.ignite().getOrCreateCache(cacheConfiguration);
-
-        List<List<?>> all = blacklistCache
+        botsCache = ic.ignite().getOrCreateCache(BOTREGISTRY_CACHE);
+        List<List<?>> all = botsCache
                 .query(new SqlFieldsQuery("select * from " + BOTREGISTRY_TABLE))
                 .getAll();
         return all.stream().map(objects -> new BotRegistry(objects.get(0).toString(),
                 objects.get(1).toString(),
                 Long.valueOf(objects.get(2).toString())))
         .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    @Override
+    public void cleanUp() {
+        ic.close(true);
     }
 
     @Override
@@ -71,8 +89,9 @@ public class IgniteBotRegistryDao implements IgniteDao<Long, BotRegistry> {
                 .load().as(Encoders.bean(BotRegistry.class));
     }
 
-    @Override
-    public void closeResource() {
-        ic.close(true);
+    public void setExpirePolicy(){
+        cacheConfiguration.setExpiryPolicyFactory(ModifiedExpiryPolicy
+                .factoryOf(new Duration(TimeUnit.SECONDS,TTL)));
     }
+
 }

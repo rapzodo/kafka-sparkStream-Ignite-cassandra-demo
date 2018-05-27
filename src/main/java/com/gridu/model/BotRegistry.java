@@ -16,10 +16,10 @@ public class BotRegistry implements Serializable {
 
     public BotRegistry(){}
 
-    public BotRegistry(String ip, String url, long numberOfClicks) {
+    public BotRegistry(String ip, String url, long count) {
         this.ip = ip;
         this.url = url;
-        this.count = numberOfClicks;
+        this.count = count;
     }
 
     public String getIp() {
