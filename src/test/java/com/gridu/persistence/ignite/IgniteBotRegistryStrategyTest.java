@@ -21,9 +21,9 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static com.gridu.utils.StopBotIgniteUtils.*;
 
-public class IgniteBotRegistryServiceTest {
+public class IgniteBotRegistryStrategyTest {
 
-    private static IgniteBotRegistryService igniteService;
+    private static IgniteBotRegistryStrategy igniteService;
     private static JavaSparkContext sc;
 
     private static Ignite ignite;
@@ -32,7 +32,7 @@ public class IgniteBotRegistryServiceTest {
     public static void setup() {
         startIgnite();
         sc = SparkArtifactsHelper.createSparkContext("local[*]", "botregistrydaotest");
-        igniteService = new IgniteBotRegistryService(new JavaIgniteContext(sc, IgniteConfiguration::new));
+        igniteService = new IgniteBotRegistryStrategy(new JavaIgniteContext(sc, IgniteConfiguration::new));
         sc.setLogLevel("ERROR");
     }
 
@@ -42,17 +42,15 @@ public class IgniteBotRegistryServiceTest {
 
     @Test
     public void shouldCreateTableAndPersistBotInBlackList() {
-        Dataset<BotRegistry> bots = createBotRegistryDataSet();
-        igniteService.persist(bots);
+        igniteService.persist(sc.parallelize(createBotsList()));
 
-        assertThat(doesTableExists(IgniteBotRegistryService.BOT_REGISTRY_TABLE)).isTrue();
+        assertThat(doesTableExists(IgniteBotRegistryStrategy.BOT_REGISTRY_TABLE)).isTrue();
 
     }
 
     @Test
     public void shouldSelectAllBotsFromBlacklist() {
-        Dataset<BotRegistry> botRegistryDataSet = createBotRegistryDataSet();
-        igniteService.persist(botRegistryDataSet);
+        igniteService.persist(sc.parallelize(createBotsList()));
         List<BotRegistry> allBots = igniteService.getAllRecords();
         assertThat(allBots).hasSize(4);
     }
@@ -76,6 +74,7 @@ public class IgniteBotRegistryServiceTest {
 
     @AfterClass
     public static void cleanUp() {
+        ignite.getOrCreateCache(IgniteBotRegistryStrategy.BOT_REGISTRY_CACHE).destroy();
         igniteService.cleanUp();
         ignite.close();
         sc.close();

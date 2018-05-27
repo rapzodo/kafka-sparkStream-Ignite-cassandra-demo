@@ -1,6 +1,6 @@
 package com.gridu.persistence;
 
-import org.apache.spark.sql.Dataset;
+import org.apache.spark.api.java.JavaRDD;
 
 import java.util.List;
 
@@ -9,7 +9,7 @@ public interface Repository<T> {
 
     void setup();
 
-    void persist(Dataset<T> t);
+    void persist(JavaRDD<T> t);
 
     List<T> getAllRecords();
 

@@ -5,7 +5,7 @@ import com.datastax.spark.connector.cql.CassandraConnector;
 import com.gridu.model.BotRegistry;
 import com.gridu.persistence.Repository;
 import org.apache.spark.SparkContext;
-import org.apache.spark.sql.Dataset;
+import org.apache.spark.api.java.JavaRDD;
 import org.joda.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,10 +40,9 @@ public class CassandraService implements Repository<BotRegistry> {
     }
 
     @Override
-    public void persist(Dataset<BotRegistry> botRegistryDataset) {
+    public void persist(JavaRDD<BotRegistry> botRegistryDataset) {
         logger.info(">>> PERSISTING BOTS TO CASSANDRA <<<<<<<");
-        botRegistryDataset.show(5,false);
-        javaFunctions(botRegistryDataset.toJavaRDD())
+        javaFunctions(botRegistryDataset)
                 .writerBuilder(KEY_SPACE, CASSANDRA_BOT_REGISTRY_TABLE, mapToRow(BotRegistry.class))
                 .withConstantTTL(Duration.standardSeconds(TTL)).saveToCassandra();
     }

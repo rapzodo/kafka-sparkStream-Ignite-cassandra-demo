@@ -5,7 +5,7 @@ import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.persistence.Repository;
 import com.gridu.persistence.cassandra.CassandraService;
-import com.gridu.persistence.ignite.IgniteEventService;
+import com.gridu.persistence.ignite.IgniteEventStrategy;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
@@ -54,14 +54,14 @@ public class StopBotJob {
             final JavaIgniteContext<Long, Event> igniteContext = new JavaIgniteContext<>(javaStreamingContext.sparkContext()
                     , IgniteConfiguration::new);
 
-//            final IgniteBotRegistryService botRegistryDao = new IgniteBotRegistryService(igniteContext);
+//            final IgniteBotRegistryStrategy botRegistryDao = new IgniteBotRegistryStrategy(igniteContext);
 
-            final IgniteEventService igniteEventService = new IgniteEventService(igniteContext);
+            final IgniteEventStrategy igniteEventStrategy = new IgniteEventStrategy(igniteContext);
 
             final Repository<BotRegistry> cassandraService = new CassandraService(javaStreamingContext.sparkContext().sc());
 
             KafkaSinkEventStreamProcessor processor = new KafkaSinkEventStreamProcessor(TOPICS, kafkaProps, javaStreamingContext,
-                    igniteEventService, cassandraService);
+                    igniteEventStrategy, cassandraService);
 
             processor.process();
         }

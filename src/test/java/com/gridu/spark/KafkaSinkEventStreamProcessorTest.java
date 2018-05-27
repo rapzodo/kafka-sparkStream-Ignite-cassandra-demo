@@ -1,7 +1,7 @@
 package com.gridu.spark;
 
 import com.gridu.persistence.cassandra.CassandraService;
-import com.gridu.persistence.ignite.IgniteEventService;
+import com.gridu.persistence.ignite.IgniteEventStrategy;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
 import com.gridu.utils.StopBotIgniteUtils;
@@ -23,7 +23,7 @@ import static com.gridu.StopBotJob.TOPICS;
 public class KafkaSinkEventStreamProcessorTest{
     private KafkaSinkEventStreamProcessor processor;
     private JavaStreamingContext javaStreamingContext;
-    private IgniteEventService eventService;
+    private IgniteEventStrategy eventService;
     private CassandraService botService;
     private JavaIgniteContext ic;
 
@@ -34,7 +34,7 @@ public class KafkaSinkEventStreamProcessorTest{
         final JavaSparkContext sc = SparkArtifactsHelper.createLocalSparkContext("processorTest");
         javaStreamingContext = new JavaStreamingContext(sc, Seconds.apply(3));
         ic = new JavaIgniteContext(sc,IgniteConfiguration::new);
-        eventService = new IgniteEventService(ic);
+        eventService = new IgniteEventStrategy(ic);
         botService = new CassandraService(sc.sc());
 
         processor = new KafkaSinkEventStreamProcessor(TOPICS,KAFKA_PROPS,

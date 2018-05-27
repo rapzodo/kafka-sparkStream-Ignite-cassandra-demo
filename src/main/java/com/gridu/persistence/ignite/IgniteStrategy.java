@@ -1,19 +1,24 @@
 package com.gridu.persistence.ignite;
 
 import com.gridu.persistence.Repository;
-import org.apache.ignite.lang.IgniteUuid;
+import com.gridu.utils.StopBotIgniteUtils;
+import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.spark.IgniteDataFrameSettings;
+import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
+import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import scala.Tuple2;
 
 import static org.apache.spark.sql.functions.col;
 
-public interface IgniteService<K, T> extends Repository<T> {
+public interface IgniteStrategy<K, T> extends Repository<T> {
 
-    String CONFIG_FILE = "config/example-ignite.xml";
+    String CONFIG_FILE = "config/example-shared-rdd.xml";
 
     default Dataset<Row> selectAggregateAndCount(JavaIgniteRDD<K, T> igniteRDD, String table, Column... groupedCols) {
         if (groupedCols == null || groupedCols.length == 0) {
@@ -26,7 +31,7 @@ public interface IgniteService<K, T> extends Repository<T> {
                 .orderBy(col("count").desc());
     }
 
-    static void save(Dataset dataset, String table, String configFile, String pKeys, String tableParams, SaveMode saveMode) {
+    static void saveDataset(Dataset dataset, String table, String configFile, String pKeys, String tableParams, SaveMode saveMode) {
         dataset.write()
                 .format(IgniteDataFrameSettings.FORMAT_IGNITE())
                 .option(IgniteDataFrameSettings.OPTION_TABLE(), table)
@@ -39,10 +44,15 @@ public interface IgniteService<K, T> extends Repository<T> {
                 .save();
     }
 
-    static long generateIgniteUuid() {
-        return IgniteUuid.randomUuid().localId();
+    default JavaIgniteRDD<K,T> saveIgniteRdd(JavaRDD<T> rdd, JavaIgniteContext ic,
+                                             CacheConfiguration<K,T> cacheConfiguration){
+        final JavaPairRDD<Long, T> pairRDD = rdd.mapToPair(T -> new Tuple2<>(StopBotIgniteUtils.generateIgniteUuidLocalId(), T));
+        final JavaIgniteRDD javaIgniteRDD = ic.fromCache(cacheConfiguration);
+        javaIgniteRDD.savePairs(pairRDD,true);
+        return javaIgniteRDD;
     }
 
     Dataset<T> loadFromIgnite();
 
+    CacheConfiguration<K, T> getCacheConfiguration();
 }

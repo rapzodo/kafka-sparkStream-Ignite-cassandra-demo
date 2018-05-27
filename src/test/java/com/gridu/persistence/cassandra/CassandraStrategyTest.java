@@ -3,10 +3,8 @@ package com.gridu.persistence.cassandra;
 import com.gridu.model.BotRegistry;
 import com.gridu.persistence.Repository;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.SparkSession;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -15,7 +13,7 @@ import java.util.Collections;
 import static org.assertj.core.api.Assertions.assertThat;
 
 
-public class CassandraDaoTest {
+public class CassandraStrategyTest {
 
     private JavaSparkContext sparkContext;
     private CassandraService dao;
@@ -29,12 +27,9 @@ public class CassandraDaoTest {
 
     @Test
     public void shouldPersistBotRegistryToCassandra(){
-        final SparkSession session = SparkArtifactsHelper.createSparkSession(sparkContext);
-        final Dataset<BotRegistry> botRegistryDataset = session
-                .createDataset(Collections.singletonList(
-                        new BotRegistry("123", "some.url", 1))
-                , Encoders.bean(BotRegistry.class));
-        dao.persist(botRegistryDataset);
+        final JavaRDD<BotRegistry> botRegistryJavaRDD = sparkContext.parallelize(Collections.singletonList(
+                new BotRegistry("123", "some.url", 1)));
+        dao.persist(botRegistryJavaRDD);
         assertThat(dao.getAllRecords()).hasSize(1);
     }
 
