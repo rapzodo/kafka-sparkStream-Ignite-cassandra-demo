@@ -1,11 +1,12 @@
 package com.gridu.persistence;
 
+import com.gridu.utils.StopBotIgniteUtils;
 import org.apache.spark.api.java.JavaRDD;
 
 import java.util.List;
 
 public interface PersistenceStrategy<T> {
-    long TTL = 60;
+    long TTL = Long.valueOf(StopBotIgniteUtils.getProperty("bots.ttl.days"));
 
     void setup();
 
