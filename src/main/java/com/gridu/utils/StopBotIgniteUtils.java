@@ -11,6 +11,12 @@ import org.apache.spark.sql.catalog.Catalog;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.ignite.IgniteSparkSession;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.Properties;
+
 public class StopBotIgniteUtils {
 
     public static Catalog getCatalog(){
@@ -34,7 +40,7 @@ public class StopBotIgniteUtils {
                  .getOrCreate();
     }
 
-    public static Ignite startIgniteForTests(){
+    public static Ignite startIgniteWithTcpDiscoverySpi(){
         final IgniteConfiguration cfg = new IgniteConfiguration()
                 .setDiscoverySpi(new TcpDiscoverySpi());
         return Ignition.getOrStart(cfg);
@@ -42,5 +48,18 @@ public class StopBotIgniteUtils {
 
     public static long generateIgniteUuidLocalId(){
         return IgniteUuid.randomUuid().localId();
+    }
+
+    public static String getProperty(String propertyName){
+        final Properties properties = new Properties();
+        try(FileInputStream is = new FileInputStream(new File("config/config.properties"))){
+            properties.load(is);
+            return properties.getProperty(propertyName);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

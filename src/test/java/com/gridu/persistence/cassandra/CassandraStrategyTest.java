@@ -20,6 +20,7 @@ public class CassandraStrategyTest {
 
     @Before
     public void setup(){
+        System.out.println(PersistenceStrategy.TTL);
         sparkContext = SparkArtifactsHelper
                 .createSparkContext("local[*]", "cassandraTest");
         dao = new CassandraStrategy(sparkContext.sc());
@@ -31,12 +32,6 @@ public class CassandraStrategyTest {
                 new BotRegistry("123", "some.url", 1)));
         dao.persist(botRegistryJavaRDD);
         assertThat(dao.getAllRecords()).hasSize(1);
-    }
-
-    @Test
-    public void shouldRemoveRecordAfterTTLExpires() throws InterruptedException {
-        Thread.sleep((PersistenceStrategy.TTL + 2) * 1000);
-        assertThat(dao.getAllRecords().isEmpty()).isTrue();
     }
 
 }

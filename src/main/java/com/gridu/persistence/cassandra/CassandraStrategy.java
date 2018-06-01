@@ -44,7 +44,7 @@ public class CassandraStrategy implements PersistenceStrategy<BotRegistry> {
         logger.info(">>> PERSISTING {} BOTS TO CASSANDRA <<<<<<<",botRegistryDataset.count());
         javaFunctions(botRegistryDataset)
                 .writerBuilder(KEY_SPACE, CASSANDRA_BOT_REGISTRY_TABLE, mapToRow(BotRegistry.class))
-                .withConstantTTL(Duration.standardSeconds(TTL)).saveToCassandra();
+                .withConstantTTL(Duration.standardDays(TTL)).saveToCassandra();
     }
 
 

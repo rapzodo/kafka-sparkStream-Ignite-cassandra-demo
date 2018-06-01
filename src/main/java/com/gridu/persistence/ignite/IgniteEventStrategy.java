@@ -23,7 +23,7 @@ public class IgniteEventStrategy implements IgniteStrategy<Long,Event> {
     private static final Logger logger = LoggerFactory.getLogger(IgniteEventStrategy.class);
 
     public static final String EVENT_TABLE = "EVENT";
-    public static final String EVENTS_CACHE_NAME = "events";
+    public static final String EVENTS_CACHE_NAME = "eventsCache";
     private JavaIgniteContext<Long,Event> ic;
     private CacheConfiguration<Long, Event> eventsCacheCfg;
     public static final int IP__ROW_COL = 0;
