@@ -11,7 +11,7 @@ import java.util.Objects;
 public class Event implements Serializable{
 
     @JsonProperty
-    @QuerySqlField
+    @QuerySqlField(index = true)
     private String type;
     @JsonProperty
     @QuerySqlField(index = true)
@@ -19,17 +19,17 @@ public class Event implements Serializable{
     @JsonProperty("unix_time")
     @QuerySqlField
     private long datetime;
-    @JsonProperty
+    @JsonProperty("category_id")
     @QuerySqlField(index = true)
-    private String url;
+    private String category;
 
     public Event(){}
 
-    public Event(String type, String ip, long unixTime, String url) {
+    public Event(String type, String ip, long unixTime, String category) {
         this.type = type;
         this.ip = ip;
         this.datetime = unixTime;
-        this.url = url;
+        this.category = category;
     }
 
     public String getType() {
@@ -56,12 +56,12 @@ public class Event implements Serializable{
         this.datetime = datetime;
     }
 
-    public String getUrl() {
-        return url;
+    public String getCategory() {
+        return category;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setCategory(String category) {
+        this.category = category;
     }
 
 
@@ -73,12 +73,12 @@ public class Event implements Serializable{
         return getDatetime() == event.getDatetime() &&
                 getType().equals(event.getType()) &&
                 Objects.equals(getIp(), event.getIp()) &&
-                Objects.equals(getUrl(), event.getUrl());
+                Objects.equals(getCategory(), event.getCategory());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getType(), getIp(), getDatetime(), getUrl());
+        return Objects.hash(getType(), getIp(), getDatetime(), getCategory());
     }
 
     @Override
@@ -87,7 +87,7 @@ public class Event implements Serializable{
                 "type='" + type + '\'' +
                 ", ip='" + ip + '\'' +
                 ", datetime=" + datetime +
-                ", url='" + url + '\'' +
+                ", category='" + category + '\'' +
                 '}';
     }
 }

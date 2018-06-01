@@ -1,6 +1,5 @@
 package com.gridu.converters;
 
-import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.Event;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
@@ -56,7 +55,7 @@ public class JsonConverterTest {
         expected.setIp("71.113.135.145");
         expected.setType("click");
         expected.setDatetime(1502746071688L);
-        expected.setUrl("http://33-zabavi.ru/index.html");
+        expected.setCategory("http://33-zabavi.ru/index.html");
         return expected;
     }
 
