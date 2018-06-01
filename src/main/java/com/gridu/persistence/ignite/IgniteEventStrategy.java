@@ -92,8 +92,7 @@ public class IgniteEventStrategy implements IgniteStrategy<Long,Event> {
 
     @Override
     public void cleanUp() {
-        eventsCache.destroy();
-        ic.close(true);
+        eventsCache.clear();
     }
 
 }

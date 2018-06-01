@@ -1,6 +1,6 @@
 package com.gridu.persistence.ignite;
 
-import com.gridu.persistence.Repository;
+import com.gridu.persistence.PersistenceStrategy;
 import com.gridu.utils.StopBotIgniteUtils;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.spark.IgniteDataFrameSettings;
@@ -16,7 +16,7 @@ import scala.Tuple2;
 
 import static org.apache.spark.sql.functions.col;
 
-public interface IgniteStrategy<K, T> extends Repository<T> {
+public interface IgniteStrategy<K, T> extends PersistenceStrategy<T> {
 
     String CONFIG_FILE = "config/example-shared-rdd.xml";
 

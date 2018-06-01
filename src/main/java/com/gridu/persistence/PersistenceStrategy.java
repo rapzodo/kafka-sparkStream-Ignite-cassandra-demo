@@ -4,8 +4,8 @@ import org.apache.spark.api.java.JavaRDD;
 
 import java.util.List;
 
-public interface Repository<T> {
-    long TTL = 3;
+public interface PersistenceStrategy<T> {
+    long TTL = 60;
 
     void setup();
 

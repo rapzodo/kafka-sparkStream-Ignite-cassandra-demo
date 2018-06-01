@@ -4,7 +4,7 @@ import com.gridu.StopBotJob;
 import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
-import com.gridu.persistence.Repository;
+import com.gridu.persistence.PersistenceStrategy;
 import com.gridu.persistence.ignite.IgniteEventStrategy;
 import com.gridu.utils.OffsetUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -33,18 +33,18 @@ public class KafkaSinkEventStreamProcessor {
     private List<String> topics;
     private Map<String, Object> props;
     private JavaStreamingContext jsc;
-    private IgniteEventStrategy eventsBusinessService;
-    private Repository<BotRegistry> botRegistryRepository;
+    private IgniteEventStrategy igniteEventStrategy;
+    private PersistenceStrategy<BotRegistry> botRegistryStrategy;
 
     public KafkaSinkEventStreamProcessor(List<String> topics, Map<String, Object> props,
                                          JavaStreamingContext jsc,
-                                         IgniteEventStrategy eventsBusinessService,
-                                         Repository botRegistryRepository) {
+                                         IgniteEventStrategy igniteEventStrategy,
+                                         PersistenceStrategy botRegistryStrategy) {
         this.topics = topics;
         this.props = props;
         this.jsc = jsc;
-        this.eventsBusinessService = eventsBusinessService;
-        this.botRegistryRepository = botRegistryRepository;
+        this.igniteEventStrategy = igniteEventStrategy;
+        this.botRegistryStrategy = botRegistryStrategy;
     }
 
     public void process() {
@@ -62,21 +62,24 @@ public class KafkaSinkEventStreamProcessor {
             rdd.cache();
             if (rdd.count() > 0) {
 
-                final String formattedString = SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds()));
-                logger.info("--------Window: {} -----------", formattedString);
+                final String formattedDate = SimpleDateFormat.getDateTimeInstance().format(new Date(time.milliseconds()));
+                logger.info("--------Window: {} -----------", formattedDate);
 
                 JavaRDD<Event> eventsRDD = rdd.map(JsonEventMessageConverter::fromJson);
 
-                eventsBusinessService.persist(eventsRDD);
+                igniteEventStrategy.persist(eventsRDD);
 
-                final Dataset<Row> aggregatedEvents = eventsBusinessService.aggregateAndCountEvents();
+                final Dataset<Row> aggregatedEvents = igniteEventStrategy.aggregateAndCountEvents().cache();
+                aggregatedEvents.show(false);
 
-                final Dataset<BotRegistry> identifiedBots = eventsBusinessService.identifyBots(aggregatedEvents).cache();
+                final JavaRDD<BotRegistry> identifiedBots = igniteEventStrategy.identifyBots(aggregatedEvents)
+                        .toJavaRDD().cache();
 
                 final long botsCount = identifiedBots.count();
 
                 if (botsCount > 0) {
-                    botRegistryRepository.persist(identifiedBots.toJavaRDD());
+                    botRegistryStrategy.persist(identifiedBots);
+                    igniteEventStrategy.cleanUp();
                 }
             }
 

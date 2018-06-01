@@ -3,7 +3,7 @@ package com.gridu.persistence.cassandra;
 import com.datastax.driver.core.Session;
 import com.datastax.spark.connector.cql.CassandraConnector;
 import com.gridu.model.BotRegistry;
-import com.gridu.persistence.Repository;
+import com.gridu.persistence.PersistenceStrategy;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.joda.time.Duration;
@@ -14,7 +14,7 @@ import java.util.List;
 
 import static com.datastax.spark.connector.japi.CassandraJavaUtil.*;
 
-public class CassandraService implements Repository<BotRegistry> {
+public class CassandraStrategy implements PersistenceStrategy<BotRegistry> {
     private Logger logger = LoggerFactory.getLogger(getClass());
 
     public static final String KEY_SPACE = "stopbot";
@@ -24,7 +24,7 @@ public class CassandraService implements Repository<BotRegistry> {
     private Session session;
 
 
-    public CassandraService(SparkContext sc) {
+    public CassandraStrategy(SparkContext sc) {
         this.sc = sc;
         setup();
     }
@@ -41,7 +41,7 @@ public class CassandraService implements Repository<BotRegistry> {
 
     @Override
     public void persist(JavaRDD<BotRegistry> botRegistryDataset) {
-        logger.info(">>> PERSISTING BOTS TO CASSANDRA <<<<<<<");
+        logger.info(">>> PERSISTING {} BOTS TO CASSANDRA <<<<<<<",botRegistryDataset.count());
         javaFunctions(botRegistryDataset)
                 .writerBuilder(KEY_SPACE, CASSANDRA_BOT_REGISTRY_TABLE, mapToRow(BotRegistry.class))
                 .withConstantTTL(Duration.standardSeconds(TTL)).saveToCassandra();

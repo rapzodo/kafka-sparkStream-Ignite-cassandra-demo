@@ -3,8 +3,8 @@ package com.gridu;
 import com.google.common.collect.ImmutableMap;
 import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
-import com.gridu.persistence.Repository;
-import com.gridu.persistence.cassandra.CassandraService;
+import com.gridu.persistence.PersistenceStrategy;
+import com.gridu.persistence.cassandra.CassandraStrategy;
 import com.gridu.persistence.ignite.IgniteEventStrategy;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
 import org.apache.ignite.Ignite;
@@ -58,7 +58,7 @@ public class StopBotJob {
 
             final IgniteEventStrategy igniteEventStrategy = new IgniteEventStrategy(igniteContext);
 
-            final Repository<BotRegistry> cassandraService = new CassandraService(javaStreamingContext.sparkContext().sc());
+            final PersistenceStrategy<BotRegistry> cassandraService = new CassandraStrategy(javaStreamingContext.sparkContext().sc());
 
             KafkaSinkEventStreamProcessor processor = new KafkaSinkEventStreamProcessor(TOPICS, kafkaProps, javaStreamingContext,
                     igniteEventStrategy, cassandraService);
