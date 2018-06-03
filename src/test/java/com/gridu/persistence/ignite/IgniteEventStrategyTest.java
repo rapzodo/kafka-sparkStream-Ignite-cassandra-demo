@@ -3,7 +3,6 @@ package com.gridu.persistence.ignite;
 import com.gridu.converters.JsonEventMessageConverter;
 import com.gridu.model.Event;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
-import com.gridu.utils.StopBotIgniteUtils;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
@@ -11,7 +10,9 @@ import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.ignite.spark.JavaIgniteRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.sql.*;
+import org.apache.spark.sql.AnalysisException;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.jetbrains.annotations.NotNull;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -21,9 +22,10 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import static com.gridu.persistence.ignite.IgniteEventStrategy.EVENT_TABLE;
+import static com.gridu.utils.StopBotUtils.doesTableExists;
+import static com.gridu.utils.StopBotUtils.getTables;
 import static org.assertj.core.api.Assertions.assertThat;
-import static com.gridu.utils.StopBotIgniteUtils.*;
+
 
 public class IgniteEventStrategyTest {
 
@@ -48,8 +50,8 @@ public class IgniteEventStrategyTest {
     }
 
     private static JavaRDD<Event> loadEventMessagesRdd() {
-        return sc.textFile("input/dataset")
-                .sample(false,0.1,1)
+        return sc.textFile("input/dataset.txt")
+//                .sample(false,0.1,1)
                 .map(JsonEventMessageConverter::fromJson)
                 .cache();
     }
@@ -59,36 +61,50 @@ public class IgniteEventStrategyTest {
         igniteEventStrategy.persist(eventJavaRDD);
 
         getTables().show();
-        System.out.println(StopBotIgniteUtils.getCatalog().getTable(EVENT_TABLE).tableType());
 
         assertThat(doesTableExists(IgniteEventStrategy.EVENT_TABLE)).isTrue();
     }
 
 
-    @Test
+    @Test//TODO extract fetchMethods to separate tests
     public void shouldAggregateAndCountIpUrlActionsAndOrderByDesc() {
-        final Dataset<Row> aggregatedEvents = igniteEventStrategy
-                .aggregateAndCountEvents();
-        aggregatedEvents.show(false);
-        assertThat(aggregatedEvents.first().get(2)).isEqualTo(5L);
+        igniteEventStrategy.cleanUp();
+
+        igniteEventStrategy.persist(eventJavaRDD);
+
+        final Dataset baseDs = igniteEventStrategy.loadFromCache();
+
+        final Dataset ipsCount = igniteEventStrategy.fetchIpEventsCount();
+        ipsCount.show();
+
+        final Dataset<Row> viewsClicksDiffByIp = igniteEventStrategy.fetchViewsAndClicksDifferenceByIp(baseDs);
+        viewsClicksDiffByIp
+                .show();
+
+        final Dataset<Row> categoriesByIp = igniteEventStrategy.fetchCategoriesByIpCount(baseDs);
+        categoriesByIp.show();
+
+        igniteEventStrategy.shortListEventsForBotsVerification(baseDs).show();
+//        aggregatedEvents.show(false);
+//        assertThat(aggregatedEvents.first().get(2)).isEqualTo(5L);
     }
 
     private JavaIgniteRDD<Long, Event> getJavaIgniteRDD() {
         return igniteEventStrategy.saveIgniteRdd(sc.parallelize(createEventsList()),ic,
-                igniteEventStrategy.getCacheConfiguration());
+                igniteEventStrategy.getBotRegistryCacheConfiguration());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowIllegalArgumentExceptionWhenNoColumnsAreProvided(){
         igniteEventStrategy.selectAggregateAndCount(ic
-                .fromCache(igniteEventStrategy.getCacheConfiguration()), IgniteEventStrategy.EVENT_TABLE);
+                .fromCache(igniteEventStrategy.getBotRegistryCacheConfiguration()), IgniteEventStrategy.EVENT_TABLE);
     }
 
     @Test
     public void shouldSelectAllEventsFromEventTable(){
         clearEventsCache();
         igniteEventStrategy.saveIgniteRdd(sc.parallelize(createEventsList()),ic,
-                igniteEventStrategy.getCacheConfiguration());
+                igniteEventStrategy.getBotRegistryCacheConfiguration());
         List<Event> events = igniteEventStrategy.getAllRecords();
         assertThat(events).hasSize(1);
         assertThat(events.get(0).getIp()).isEqualTo("123.345");

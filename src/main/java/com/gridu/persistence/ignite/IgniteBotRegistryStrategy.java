@@ -1,7 +1,7 @@
 package com.gridu.persistence.ignite;
 
 import com.gridu.model.BotRegistry;
-import com.gridu.utils.StopBotIgniteUtils;
+import com.gridu.utils.StopBotUtils;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.query.SqlFieldsQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -9,6 +9,7 @@ import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
+import org.apache.spark.sql.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +29,7 @@ public class IgniteBotRegistryStrategy implements IgniteStrategy<Long, BotRegist
     public static final String BOT_REGISTRY_TABLE = "BOTREGISTRY";
     public static final String BOT_REGISTRY_CACHE = "botRegistryCache";
     private JavaIgniteContext<Long,BotRegistry> ic;
-    private CacheConfiguration<Long,BotRegistry> cacheConfiguration;
+    private CacheConfiguration<Long,BotRegistry> botRegistryCacheConfiguration;
     private IgniteCache<Long,BotRegistry> botsCache;
 
     public IgniteBotRegistryStrategy(JavaIgniteContext javaIgniteContext) {
@@ -38,17 +39,17 @@ public class IgniteBotRegistryStrategy implements IgniteStrategy<Long, BotRegist
 
     @Override
     public void setup() {
-        cacheConfiguration = new CacheConfiguration<>(BOT_REGISTRY_CACHE);
-        cacheConfiguration.setIndexedTypes(Long.class, BotRegistry.class);
+        botRegistryCacheConfiguration = new CacheConfiguration<>(BOT_REGISTRY_CACHE);
+        botRegistryCacheConfiguration.setIndexedTypes(Long.class, BotRegistry.class);
         setExpirePolicy();
-        botsCache = ic.ignite().getOrCreateCache(cacheConfiguration);
-        StopBotIgniteUtils.getTables().show();
+        botsCache = ic.ignite().getOrCreateCache(botRegistryCacheConfiguration);
+        StopBotUtils.getTables().show();
     }
 
     @Override
     public void persist(JavaRDD<BotRegistry> botRegistryJavaRDD) {
         logger.info(">>>SAVING BOTS TO IGNITE BLACKLIST<<<");
-        saveIgniteRdd(botRegistryJavaRDD,ic,cacheConfiguration);
+        saveIgniteRdd(botRegistryJavaRDD,ic, botRegistryCacheConfiguration);
     }
 
     @Override
@@ -69,19 +70,26 @@ public class IgniteBotRegistryStrategy implements IgniteStrategy<Long, BotRegist
 
     @Override
     public Dataset<BotRegistry> loadFromIgnite() {
-        return ic.ic().sqlContext().read().format(FORMAT_IGNITE())
+        return ic.ic().sqlContext()
+                .read()
+                .format(FORMAT_IGNITE())
                 .option(OPTION_TABLE(),IgniteBotRegistryStrategy.BOT_REGISTRY_TABLE)
                 .option(OPTION_CONFIG_FILE(),IgniteEventStrategy.CONFIG_FILE)
                 .load().as(Encoders.bean(BotRegistry.class));
     }
 
     @Override
-    public CacheConfiguration<Long, BotRegistry> getCacheConfiguration() {
-        return new CacheConfiguration<>(cacheConfiguration);
+    public Dataset<Row> loadFromCache() {
+        return ic.fromCache(botRegistryCacheConfiguration).sql("select * from " + BOT_REGISTRY_TABLE);
+    }
+
+    @Override
+    public CacheConfiguration<Long, BotRegistry> getBotRegistryCacheConfiguration() {
+        return new CacheConfiguration<>(botRegistryCacheConfiguration);
     }
 
     private void setExpirePolicy(){
-        cacheConfiguration.setExpiryPolicyFactory(ModifiedExpiryPolicy
+        botRegistryCacheConfiguration.setExpiryPolicyFactory(ModifiedExpiryPolicy
                 .factoryOf(new Duration(TimeUnit.SECONDS,TTL)));
     }
 

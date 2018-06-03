@@ -6,10 +6,16 @@ import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.lang.IgniteUuid;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.catalog.Catalog;
 import org.apache.spark.sql.catalog.Table;
 import org.apache.spark.sql.ignite.IgniteSparkSession;
+import org.apache.spark.streaming.api.java.JavaInputDStream;
+import org.apache.spark.streaming.kafka010.CanCommitOffsets;
+import org.apache.spark.streaming.kafka010.HasOffsetRanges;
+import org.apache.spark.streaming.kafka010.OffsetRange;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -17,7 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
-public class StopBotIgniteUtils {
+public class StopBotUtils {
 
     public static Catalog getCatalog(){
            return getIgniteSparkSession().catalog();
@@ -50,16 +56,21 @@ public class StopBotIgniteUtils {
         return IgniteUuid.randomUuid().localId();
     }
 
-    public static String getProperty(String propertyName){
+    public static String getProperty(String propertyName,String defaultValue){
         final Properties properties = new Properties();
         try(FileInputStream is = new FileInputStream(new File("config/config.properties"))){
             properties.load(is);
-            return properties.getProperty(propertyName);
+            return properties.getProperty(propertyName, defaultValue);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static void commitOffSets(JavaRDD<ConsumerRecord<String,String>> rdd, JavaInputDStream is){
+        OffsetRange[] offsetRange = ((HasOffsetRanges) rdd.rdd()).offsetRanges();
+        ((CanCommitOffsets) is.inputDStream()).commitAsync(offsetRange);
     }
 }

@@ -6,7 +6,7 @@ import com.gridu.model.BotRegistry;
 import com.gridu.model.Event;
 import com.gridu.persistence.PersistenceStrategy;
 import com.gridu.persistence.ignite.IgniteEventStrategy;
-import com.gridu.utils.OffsetUtils;
+import com.gridu.utils.StopBotUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
@@ -69,7 +69,7 @@ public class KafkaSinkEventStreamProcessor {
 
                 igniteEventStrategy.persist(eventsRDD);
 
-                final Dataset<Row> aggregatedEvents = igniteEventStrategy.aggregateAndCountEvents().cache();
+                final Dataset<Row> aggregatedEvents = igniteEventStrategy.fetchIpEventsCount().cache();
                 aggregatedEvents.show(false);
 
                 final JavaRDD<BotRegistry> identifiedBots = igniteEventStrategy.identifyBots(aggregatedEvents)
@@ -85,7 +85,7 @@ public class KafkaSinkEventStreamProcessor {
 
         });
 
-        stream.foreachRDD(consumerRecordJavaRDD -> OffsetUtils.commitOffSets(consumerRecordJavaRDD, stream));
+        stream.foreachRDD(consumerRecordJavaRDD -> StopBotUtils.commitOffSets(consumerRecordJavaRDD, stream));
 
         jsc.start();
 

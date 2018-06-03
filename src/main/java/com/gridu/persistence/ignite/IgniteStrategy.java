@@ -1,7 +1,7 @@
 package com.gridu.persistence.ignite;
 
 import com.gridu.persistence.PersistenceStrategy;
-import com.gridu.utils.StopBotIgniteUtils;
+import com.gridu.utils.StopBotUtils;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.spark.IgniteDataFrameSettings;
 import org.apache.ignite.spark.JavaIgniteContext;
@@ -46,7 +46,7 @@ public interface IgniteStrategy<K, T> extends PersistenceStrategy<T> {
 
     default JavaIgniteRDD<K,T> saveIgniteRdd(JavaRDD<T> rdd, JavaIgniteContext ic,
                                              CacheConfiguration<K,T> cacheConfiguration){
-        final JavaPairRDD<Long, T> pairRDD = rdd.mapToPair(T -> new Tuple2<>(StopBotIgniteUtils.generateIgniteUuidLocalId(), T));
+        final JavaPairRDD<Long, T> pairRDD = rdd.mapToPair(T -> new Tuple2<>(StopBotUtils.generateIgniteUuidLocalId(), T));
         final JavaIgniteRDD javaIgniteRDD = ic.fromCache(cacheConfiguration);
         javaIgniteRDD.savePairs(pairRDD,true);
         return javaIgniteRDD;
@@ -54,5 +54,7 @@ public interface IgniteStrategy<K, T> extends PersistenceStrategy<T> {
 
     Dataset<T> loadFromIgnite();
 
-    CacheConfiguration<K, T> getCacheConfiguration();
+    Dataset<Row> loadFromCache();
+
+    CacheConfiguration<K, T> getBotRegistryCacheConfiguration();
 }

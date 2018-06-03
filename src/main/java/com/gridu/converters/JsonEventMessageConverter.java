@@ -1,7 +1,8 @@
 package com.gridu.converters;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.gridu.model.Event;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,8 @@ public class JsonEventMessageConverter {
 
     public static String toJson(Event event) {
         try {
-            return objectMapper.writeValueAsString(event);
+            return objectMapper
+                    .writeValueAsString(event);
         } catch (IOException e) {
             LOG.error("Error parsing Event > Json", e);
         }

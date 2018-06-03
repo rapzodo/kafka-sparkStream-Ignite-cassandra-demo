@@ -4,7 +4,7 @@ import com.gridu.persistence.cassandra.CassandraStrategy;
 import com.gridu.persistence.ignite.IgniteEventStrategy;
 import com.gridu.spark.helpers.SparkArtifactsHelper;
 import com.gridu.spark.processors.KafkaSinkEventStreamProcessor;
-import com.gridu.utils.StopBotIgniteUtils;
+import com.gridu.utils.StopBotUtils;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -30,7 +30,7 @@ public class KafkaSinkEventStreamProcessorTest{
     @Before
     @Ignore
     public void setup(){
-        StopBotIgniteUtils.startIgniteWithTcpDiscoverySpi();
+        StopBotUtils.startIgniteWithTcpDiscoverySpi();
         final JavaSparkContext sc = SparkArtifactsHelper.createLocalSparkContext("processorTest");
         javaStreamingContext = new JavaStreamingContext(sc, Seconds.apply(3));
         ic = new JavaIgniteContext(sc,IgniteConfiguration::new);

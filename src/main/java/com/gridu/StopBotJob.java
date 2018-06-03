@@ -23,8 +23,8 @@ import java.util.Map;
 
 public class StopBotJob {
 
-    public static final long POLL_MS = 60000;//60000
-    public static final long WINDOW_MS = 600000;//60000
+    public static final long POLL_MS = 60000;//1min
+    public static final long WINDOW_MS = 600000;//10min
     public static final long SESSION_TIMEOUT_MS = 70000;
     public static final long BATCH_SIZE = 2000;
     public static final long HEARTBEAT_MS = 20000;

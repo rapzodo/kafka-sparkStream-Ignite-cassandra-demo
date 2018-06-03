@@ -1,27 +1,25 @@
 package com.gridu.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.ignite.cache.query.annotations.QuerySqlField;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.annotate.JsonPropertyOrder;
 
 import java.io.Serializable;
 import java.util.Objects;
 
-@JsonPropertyOrder({"type","ip","unix_time","url"})
+@JsonPropertyOrder({"unix_time,category_id,ip,type"})
 public class Event implements Serializable{
 
-    @JsonProperty
-    @QuerySqlField(index = true)
-    private String type;
-    @JsonProperty
-    @QuerySqlField(index = true)
-    private String ip;
     @JsonProperty("unix_time")
     @QuerySqlField
     private long datetime;
     @JsonProperty("category_id")
     @QuerySqlField(index = true)
     private String category;
+    @QuerySqlField(index = true)
+    private String ip;
+    @QuerySqlField(index = true)
+    private String type;
 
     public Event(){}
 
@@ -71,23 +69,24 @@ public class Event implements Serializable{
         if (!(o instanceof Event)) return false;
         Event event = (Event) o;
         return getDatetime() == event.getDatetime() &&
-                getType().equals(event.getType()) &&
+                Objects.equals(getType(), event.getType()) &&
                 Objects.equals(getIp(), event.getIp()) &&
                 Objects.equals(getCategory(), event.getCategory());
     }
 
     @Override
     public int hashCode() {
+
         return Objects.hash(getType(), getIp(), getDatetime(), getCategory());
     }
 
     @Override
     public String toString() {
         return "Event{" +
-                "type='" + type + '\'' +
-                ", ip='" + ip + '\'' +
-                ", datetime=" + datetime +
+                "datetime=" + datetime +
                 ", category='" + category + '\'' +
+                ", ip='" + ip + '\'' +
+                ", type='" + type + '\'' +
                 '}';
     }
 }

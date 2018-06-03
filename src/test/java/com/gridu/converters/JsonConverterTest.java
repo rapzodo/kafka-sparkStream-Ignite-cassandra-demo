@@ -10,18 +10,13 @@ public class JsonConverterTest {
 
     @Test
     public void testEventToJsonParsing() {
-        String expectedJson = StringUtils.deleteWhitespace(aGoodAndCleanJsonString());
+        String expectedJson = "{\"ip\":\"172.10.0.67\",\"type\":\"view\",\"unix_time\":1527607613,\"category_id\":\"1009\"}";
         assertThat(JsonEventMessageConverter.toJson(anEvent())).isEqualTo(expectedJson);
     }
 
     @Test
     public void shouldParseGoodAndCleanJsonString() {
         assertThat(JsonEventMessageConverter.fromJson(aGoodAndCleanJsonString())).isEqualTo(anEvent());
-    }
-
-    @Test
-    public void shouldCleanseAndParseDoubleQuotedJsonString() {
-        assertThat(JsonEventMessageConverter.fromJson(aDoubleQuotedJsonString())).isEqualTo(anEvent());
     }
 
     @Test
@@ -40,52 +35,39 @@ public class JsonConverterTest {
     }
 
     @Test
-    public void shouldCleanseAndParseTwiceDoubleQuotedFieldStringString() {
-        assertThat(JsonEventMessageConverter.fromJson(aTwiceDoubleQuoteUrlFieldJsonString())).isEqualTo(anEvent());
-    }
-
-    @Test
     public void shouldParseMissingFieldJsonString() {
-        Event expectedEvent = new Event("click","140.94.141.193",0,null);
+        Event expectedEvent = new Event(null,"172.10.0.67",1527607613,"1009");
         assertThat(JsonEventMessageConverter.fromJson(aMissingFieldJsonString())).isEqualTo(expectedEvent);
     }
 
     private Event anEvent() {
         Event expected = new Event();
-        expected.setIp("71.113.135.145");
-        expected.setType("click");
-        expected.setDatetime(1502746071688L);
-        expected.setCategory("http://33-zabavi.ru/index.html");
+        expected.setIp("172.10.0.67");
+        expected.setType("view");
+        expected.setDatetime(1527607613L);
+        expected.setCategory("1009");
         return expected;
     }
 
 
     private String aGoodAndCleanJsonString() {
-        return "{\"type\": \"click\", \"ip\": \"71.113.135.145\", \"unix_time\": 1502746071688, \"url\": \"http://33-zabavi.ru/index.html\"}";
+        return "{\"unix_time\":\"1527607613\", \"category_id\":1009, \"ip\":\"172.10.0.67\", \"type\":\"view\"}";
     }
 
     private String aDoubleQuotesStartingJsonString() {
-        return "\"{\"type\": \"click\", \"ip\": \"71.113.135.145\", \"unix_time\": 1502746071688, \"url\": \"http://33-zabavi.ru/index.html\"}";
-    }
-
-    private String aDoubleQuotedJsonString() {
-        return "\"{\"type\": \"click\", \"ip\": \"71.113.135.145\", \"unix_time\": 1502746071688, \"url\": \"http://33-zabavi.ru/index.html\"}";
+        return "\"{\"unix_time\":\"1527607613\", \"category_id\":1009, \"ip\":\"172.10.0.67\", \"type\":\"view\"}";
     }
 
     private String aDoubleQuotesEndingJsonString() {
-        return "{\"type\": \"click\", \"ip\": \"71.113.135.145\", \"unix_time\": 1502746071688, \"url\": \"http://33-zabavi.ru/index.html\"}\"";
-    }
-
-    private String aTwiceDoubleQuoteUrlFieldJsonString() {
-        return "{\"type\": \"click\", \"ip\": \"71.113.135.145\", \"unix_time\": 1502746071688, \"url\": \"http://33-zabavi.ru/index.html\"}\"";
+        return "{\"unix_time\":\"1527607613\", \"category_id\":1009, \"ip\":\"172.10.0.67\", \"type\":\"view\"}\"";
     }
 
     private String anIncompleteJsonString() {
-        return "{\"type\": \"click\", \"ip\": \"140.94.141.193\", ";
+        return "{\"unix_time\":\"1527607613\", \"category_id\":1009, \"ip\":\"172.10.0.67\", ";
     }
 
     private String aMissingFieldJsonString() {
-        return "{\"type\": \"click\", \"ip\": \"140.94.141.193\"}";
+        return "{\"unix_time\":\"1527607613\", \"category_id\":1009, \"ip\":\"172.10.0.67\"}";
     }
 
 

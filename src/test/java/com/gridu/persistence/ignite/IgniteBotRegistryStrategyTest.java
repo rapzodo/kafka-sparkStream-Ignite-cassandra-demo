@@ -19,7 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static com.gridu.utils.StopBotIgniteUtils.*;
+import static com.gridu.utils.StopBotUtils.*;
 
 public class IgniteBotRegistryStrategyTest {
 
