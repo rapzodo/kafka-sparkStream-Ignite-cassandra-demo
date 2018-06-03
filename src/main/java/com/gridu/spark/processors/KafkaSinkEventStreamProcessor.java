@@ -69,10 +69,13 @@ public class KafkaSinkEventStreamProcessor {
 
                 igniteEventStrategy.persist(eventsRDD);
 
-                final Dataset<Row> aggregatedEvents = igniteEventStrategy.fetchIpEventsCount().cache();
-                aggregatedEvents.show(false);
+                final Dataset<Row> eventsDs = igniteEventStrategy.loadFromCache();
 
-                final JavaRDD<BotRegistry> identifiedBots = igniteEventStrategy.identifyBots(aggregatedEvents)
+                final Dataset<Row> botsCandidateShortlist = igniteEventStrategy.shortListEventsForBotsVerification(eventsDs);
+
+                botsCandidateShortlist.show();
+
+                final JavaRDD<BotRegistry> identifiedBots = igniteEventStrategy.identifyBots(botsCandidateShortlist)
                         .toJavaRDD().cache();
 
                 final long botsCount = identifiedBots.count();

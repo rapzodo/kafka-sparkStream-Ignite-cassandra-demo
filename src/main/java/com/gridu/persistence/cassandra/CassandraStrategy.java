@@ -31,12 +31,16 @@ public class CassandraStrategy implements PersistenceStrategy<BotRegistry> {
 
     @Override
     public void setup() {
+        logger.info(">>>BOTS TTL {} DAYS<<<",TTL);
         sc.getConf().set("spark.cassandra.connection.host", CASSANDRA_HOST_PROPERTY);
         sc.getConf().set("spark.driver.allowMultipleContexts", "true");
         final CassandraConnector cassandraConnector = CassandraConnector.apply(sc.conf());
         session = cassandraConnector.openSession();
-        session.execute("CREATE KEYSPACE IF NOT EXISTS " + KEY_SPACE + " WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}");
-        session.execute("CREATE TABLE IF NOT EXISTS " + KEY_SPACE + "." + CASSANDRA_BOT_REGISTRY_TABLE + " (ip TEXT PRIMARY KEY, url TEXT, count INT)");
+        session.execute("CREATE KEYSPACE IF NOT EXISTS " + KEY_SPACE
+                + " WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}");
+        session.execute("CREATE TABLE IF NOT EXISTS " + KEY_SPACE + "." + CASSANDRA_BOT_REGISTRY_TABLE
+                + " (ip TEXT PRIMARY KEY, events BIGINT, categories BIGINT, views_Clicks_Diff FLOAT, " +
+                "views BIGINT, clicks BIGINT)");
     }
 
     @Override

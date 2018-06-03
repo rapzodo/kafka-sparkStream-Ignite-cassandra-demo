@@ -11,15 +11,17 @@ public class BotRegistry implements Serializable {
     @QuerySqlField(index = true)
     private long events;
     @QuerySqlField(index = true)
-    private int categories;
+    private long categories;
     @QuerySqlField(index = true)
-    private int viewsClicksDiff;
-    private int views;
-    private int clicks;
+    private double viewsClicksDiff;
+    @QuerySqlField
+    private long views;
+    @QuerySqlField
+    private long clicks;
 
     public BotRegistry(){}
 
-    public BotRegistry(String ip, long events, int categories, int viewsClicksDiff, int views, int clicks) {
+    public BotRegistry(String ip, long events, long categories, double viewsClicksDiff, long views, long clicks) {
         this.ip = ip;
         this.events = events;
         this.categories = categories;
@@ -36,7 +38,7 @@ public class BotRegistry implements Serializable {
         this.ip = ip;
     }
 
-    public int getCategories() {
+    public long getCategories() {
         return categories;
     }
 
@@ -48,31 +50,31 @@ public class BotRegistry implements Serializable {
         this.events = events;
     }
 
-    public void setCategories(int categories) {
+    public void setCategories(long categories) {
         this.categories = categories;
     }
 
-    public int getViewsClicksDiff() {
+    public double getViewsClicksDiff() {
         return viewsClicksDiff;
     }
 
-    public void setViewsClicksDiff(int viewsClicksDiff) {
+    public void setViewsClicksDiff(double viewsClicksDiff) {
         this.viewsClicksDiff = viewsClicksDiff;
     }
 
-    public int getViews() {
+    public long getViews() {
         return views;
     }
 
-    public void setViews(int views) {
+    public void setViews(long views) {
         this.views = views;
     }
 
-    public int getClicks() {
+    public long getClicks() {
         return clicks;
     }
 
-    public void setClicks(int clicks) {
+    public void setClicks(long clicks) {
         this.clicks = clicks;
     }
 
@@ -91,7 +93,6 @@ public class BotRegistry implements Serializable {
 
     @Override
     public int hashCode() {
-
         return Objects.hash(getIp(), getEvents(), getCategories(), getViewsClicksDiff(), getViews(), getClicks());
     }
 }

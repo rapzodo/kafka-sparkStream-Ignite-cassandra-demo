@@ -8,8 +8,6 @@ import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.spark.JavaIgniteContext;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
-import org.apache.spark.sql.SparkSession;
 import org.jetbrains.annotations.NotNull;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -59,11 +57,6 @@ public class IgniteBotRegistryStrategyTest {
     public void shouldReadDatasetFromIgnite() {
         Dataset<BotRegistry> botRegistryDataset = igniteService.loadFromIgnite();
         assertThat(botRegistryDataset.count()).isEqualTo(botRegistryDataset.count());
-    }
-
-    private Dataset<BotRegistry> createBotRegistryDataSet() {
-        SparkSession session = SparkSession.builder().sparkContext(sc.sc()).getOrCreate();
-        return session.createDataset(createBotsList(), Encoders.bean(BotRegistry.class));
     }
 
     @NotNull

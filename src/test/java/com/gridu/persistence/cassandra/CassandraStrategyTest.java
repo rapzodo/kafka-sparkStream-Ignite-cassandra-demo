@@ -20,7 +20,6 @@ public class CassandraStrategyTest {
 
     @Before
     public void setup(){
-        System.out.println(PersistenceStrategy.TTL);
         sparkContext = SparkArtifactsHelper
                 .createSparkContext("local[*]", "cassandraTest");
         dao = new CassandraStrategy(sparkContext.sc());
