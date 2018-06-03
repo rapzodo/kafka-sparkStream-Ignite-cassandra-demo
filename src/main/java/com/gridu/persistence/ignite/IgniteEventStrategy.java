@@ -33,9 +33,6 @@ public class IgniteEventStrategy implements IgniteStrategy<Long,Event> {
     public static final int IP__ROW_COL = 0;
     public static final int URL__ROW_COL = 1;
     public static final int COUNT_ROW_COL = 2;
-    private static final long REQUESTS_LIMIT = Long.valueOf(StopBotUtils.getProperty("requests.limit","10000"));
-    private static final long  VIEWS_CLICKS_DIFF= Long.valueOf(StopBotUtils.getProperty("clicks.views.diff.limit","3"));
-    private static final long CATEGORIES_LIMIT = Long.valueOf(StopBotUtils.getProperty("categories.limit","3"));
     private IgniteCache<Long,Event> eventsCache;
 
     public IgniteEventStrategy(JavaIgniteContext ic) {
@@ -55,8 +52,8 @@ public class IgniteEventStrategy implements IgniteStrategy<Long,Event> {
         return loadFromCache()
                 .groupBy("ip")
                 .count()
-                .withColumnRenamed("count","eventsByIp")
-                .orderBy(col("eventsByIp").desc());
+                .withColumnRenamed("count","events")
+                .orderBy(col("events").desc());
     }
 
     public Dataset<Row> fetchCategoriesByIpCount(Dataset<Row> baseEventsDs){
@@ -66,7 +63,7 @@ public class IgniteEventStrategy implements IgniteStrategy<Long,Event> {
                 .count()
                 .groupBy("ip")
                 .count()
-                .withColumnRenamed("count","categoriesByIp");
+                .withColumnRenamed("count","categories");
     }
 
     public Dataset<Row> fetchViewsAndClicksDifferenceByIp(Dataset<Row> baseEventsDs){
@@ -84,18 +81,18 @@ public class IgniteEventStrategy implements IgniteStrategy<Long,Event> {
                 .select(col("ip"),when(col("views").isNull(),0)
                         .otherwise(col("views")).as("views"),col("clicks"))
                 .select(col("ip"), col("views"), col("clicks"),
-                        col("views").divide(col("clicks")).as("diff"));
+                        col("views").divide(col("clicks")).as("viewsClicksDiff"));
     }
 
     public Dataset<Row> shortListEventsForBotsVerification(Dataset<Row> baseDS){
         logger.info(">>> PREPARING BOTS CANDIDATES SHORTLIST BY IP <<<<");
         return fetchIpEventsCount().join(fetchViewsAndClicksDifferenceByIp(baseDS), "ip")
                 .join(fetchCategoriesByIpCount(baseDS), "ip")
-                .orderBy(col("diff").desc());
+                .orderBy(col("viewsClicksDiff").desc());
     }
 
     public Dataset<BotRegistry> identifyBots(Dataset<Row> botsShortlist) {
-        return botsShortlist
+        return botsShortlist.as(Encoders.bean(BotRegistry.class))
                 .filter(new BotsIdentifyRules())
                 .as(Encoders.bean(BotRegistry.class));
     }

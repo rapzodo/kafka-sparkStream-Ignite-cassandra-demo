@@ -58,8 +58,8 @@ public class IgniteBotRegistryStrategy implements IgniteStrategy<Long, BotRegist
                 .query(new SqlFieldsQuery("select * from " + BOT_REGISTRY_TABLE))
                 .getAll();
         return all.stream().map(objects -> new BotRegistry(objects.get(0).toString(),
-                objects.get(1).toString(),
-                Long.valueOf(objects.get(2).toString())))
+                (Long)objects.get(1),(Integer) objects.get(2),(Integer)objects.get(3),
+                (Integer)objects.get(4),(Integer)objects.get(5)))
         .collect(Collectors.toCollection(ArrayList::new));
     }
 

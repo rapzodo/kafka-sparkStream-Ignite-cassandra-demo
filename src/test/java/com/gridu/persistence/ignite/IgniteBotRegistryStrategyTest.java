@@ -68,8 +68,8 @@ public class IgniteBotRegistryStrategyTest {
 
     @NotNull
     private List<BotRegistry> createBotsList() {
-        return Arrays.asList(new BotRegistry("123.456", "http://imabot", 5000),
-                new BotRegistry("789.987", "http://imabot", 10000));
+        return Arrays.asList(new BotRegistry("123.456", 5000 ,3,6,2,5),
+                new BotRegistry("789.987", 10000 ,3,6,2,5));
     }
 
     @AfterClass

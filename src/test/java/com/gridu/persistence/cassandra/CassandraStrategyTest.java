@@ -29,7 +29,7 @@ public class CassandraStrategyTest {
     @Test
     public void shouldPersistBotRegistryToCassandra(){
         final JavaRDD<BotRegistry> botRegistryJavaRDD = sparkContext.parallelize(Collections.singletonList(
-                new BotRegistry("123", "some.url", 1)));
+                new BotRegistry("789.987", 10000 ,3,6,2,5)));
         dao.persist(botRegistryJavaRDD);
         assertThat(dao.getAllRecords()).hasSize(1);
     }

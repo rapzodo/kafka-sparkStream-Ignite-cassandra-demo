@@ -6,20 +6,26 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class BotRegistry implements Serializable {
-
     @QuerySqlField(index = true)
     private String ip;
     @QuerySqlField(index = true)
-    private String url;
+    private long events;
     @QuerySqlField(index = true)
-    private long count;
+    private int categories;
+    @QuerySqlField(index = true)
+    private int viewsClicksDiff;
+    private int views;
+    private int clicks;
 
     public BotRegistry(){}
 
-    public BotRegistry(String ip, String url, long count) {
+    public BotRegistry(String ip, long events, int categories, int viewsClicksDiff, int views, int clicks) {
         this.ip = ip;
-        this.url = url;
-        this.count = count;
+        this.events = events;
+        this.categories = categories;
+        this.viewsClicksDiff = viewsClicksDiff;
+        this.views = views;
+        this.clicks = clicks;
     }
 
     public String getIp() {
@@ -30,20 +36,44 @@ public class BotRegistry implements Serializable {
         this.ip = ip;
     }
 
-    public String getUrl() {
-        return url;
+    public int getCategories() {
+        return categories;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public long getEvents() {
+        return events;
     }
 
-    public long getCount() {
-        return count;
+    public void setEvents(long events) {
+        this.events = events;
     }
 
-    public void setCount(long count) {
-        this.count = count;
+    public void setCategories(int categories) {
+        this.categories = categories;
+    }
+
+    public int getViewsClicksDiff() {
+        return viewsClicksDiff;
+    }
+
+    public void setViewsClicksDiff(int viewsClicksDiff) {
+        this.viewsClicksDiff = viewsClicksDiff;
+    }
+
+    public int getViews() {
+        return views;
+    }
+
+    public void setViews(int views) {
+        this.views = views;
+    }
+
+    public int getClicks() {
+        return clicks;
+    }
+
+    public void setClicks(int clicks) {
+        this.clicks = clicks;
     }
 
     @Override
@@ -51,23 +81,17 @@ public class BotRegistry implements Serializable {
         if (this == o) return true;
         if (!(o instanceof BotRegistry)) return false;
         BotRegistry that = (BotRegistry) o;
-        return getCount() == that.getCount() &&
-                Objects.equals(getIp(), that.getIp()) &&
-                Objects.equals(getUrl(), that.getUrl());
+        return getEvents() == that.getEvents() &&
+                getCategories() == that.getCategories() &&
+                getViewsClicksDiff() == that.getViewsClicksDiff() &&
+                getViews() == that.getViews() &&
+                getClicks() == that.getClicks() &&
+                Objects.equals(getIp(), that.getIp());
     }
 
     @Override
     public int hashCode() {
 
-        return Objects.hash(getIp(), getUrl(), getCount());
-    }
-
-    @Override
-    public String toString() {
-        return "BotRegistry{" +
-                "ip='" + ip + '\'' +
-                ", url='" + url + '\'' +
-                ", count=" + count +
-                '}';
+        return Objects.hash(getIp(), getEvents(), getCategories(), getViewsClicksDiff(), getViews(), getClicks());
     }
 }
