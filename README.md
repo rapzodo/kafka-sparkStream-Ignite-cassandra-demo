@@ -11,6 +11,6 @@ Data should be ingested in kafka, consumed and processed by sparkstreaming and p
 - Kafka FileConnector consumes partners events files from specif directory and populates kafka topic 
 - Messages are consumed by Kafka-Spark-streaming API
 - a Custom JsonConverter validates, clean and parses the messagens into a Events JavaIgniteRdd
-- IgnitesRdd as queried and aggregated counting by ip and category and results in a aggregated dataset ready to be scanned in order to find bots (using a filter)
+- IgniteRdd are queried and aggregated counting by ip and category and sinks an aggregated dataset ready to be scanned in order to find bots (using a filter)
 - Identified bots are persisted in Cassandra/Ignite dependind on BaseDao implementation provided.
 - A constante TTL is defined in order to remove bots from Blacklist 
