@@ -13,4 +13,4 @@ Data should be ingested in kafka, consumed and processed by sparkstreaming and p
 - a Custom JsonConverter validates, clean and parses the messagens into a Events JavaIgniteRdd
 - IgniteRdd are queried and aggregated counting by ip and category and sinks an aggregated dataset ready to be scanned in order to find bots (using a filter)
 - Identified bots are persisted in Cassandra/Ignite dependind on BaseDao implementation provided.
-- A constante TTL is defined in order to remove bots from Blacklist 
+- A constant TTL is defined in order to remove bots from Blacklist 
